@@ -1,5 +1,8 @@
-services:
+networks:
+  app-tier:
+    driver: bridge
 
+services:
   # listens to mqtt packets and saves to database
   meshtastic-mqtt:
     container_name: meshtastic-mqtt
@@ -10,9 +13,10 @@ services:
       context: .
       dockerfile: ./Dockerfile
     command: /app/docker/mqtt.sh
-    environment:
-      DATABASE_URL: "mysql://root:password@database:3306/meshtastic-map?connection_limit=100"
-      MQTT_OPTS: "" # add any custom mqtt.js options here
+    env_file:
+      - .env.local
+    networks:
+      - app-tier
 
   # runs the web map ui
   meshtastic-map:
@@ -26,19 +30,19 @@ services:
     command: /app/docker/map.sh
     ports:
       - 8080:8080/tcp
-    environment:
-      DATABASE_URL: "mysql://root:password@database:3306/meshtastic-map?connection_limit=100"
-      MAP_OPTS: "" # add any custom index.js options here
+    env_file:
+      - .env.local
+    networks:
+      - app-tier
 
   # runs the database to store everything from mqtt
   database:
     container_name: database
-    image: bitnami/mariadb
+    image: bitnami/mariadb:10.11
     ports:
       - 3306:3306/tcp
-    environment:
-      MARIADB_DATABASE: "meshtastic-map"
-      MARIADB_ROOT_PASSWORD: "password"
+    env_file:
+      - .env.local
     volumes:
       - database_data:/bitnami/mariadb
     healthcheck:
@@ -47,6 +51,8 @@ services:
       timeout: 5s
       retries: 6
       start_interval: 5s
+    networks:
+      - app-tier
 
 volumes:
   database_data:
