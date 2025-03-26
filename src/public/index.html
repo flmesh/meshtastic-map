@@ -3,8 +3,8 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Meshtastic Map</title>
-    <meta name="title" content="Meshtastic Map">
+    <title>Florida Mesh Map</title>
+    <meta name="title" content="Florida Mesh Map">
     <meta name="description" content="An interactive map of all Meshtastic nodes.">
     <link rel="icon" type="image/png" href="/icon.png"/>
 
@@ -146,17 +146,22 @@
         <div class="flex flex-col h-full">
 
             <!-- announcement -->
+            <!--
             <div v-if="isShowingAnnouncement" class="flex bg-yellow-300 p-2 border-gray-300 border-b">
+            -->
 
                 <!-- info -->
+                <!--
                 <div class="my-auto leading-tight">
                     <div class="font-bold">Service Announcement</div>
                     <div class="text-sm">
                         <span>Changes were made to mqtt.meshtastic.org. Uplink your nodes to <button @click="isShowingInfoModal = true" type="button" class="link">our MQTT server</button> to continue showing on this map.</span>
                     </div>
                 </div>
+                -->
 
                 <!-- action buttons -->
+                <!--
                 <div class="flex my-auto ml-auto mr-0 sm:mr-2">
                     <a @click="dismissAnnouncement" href="javascript:void(0)" class="rounded-full">
                         <div class="bg-white hover:bg-gray-100 p-2 rounded-full">
@@ -166,8 +171,11 @@
                         </div>
                     </a>
                 </div>
+                -->
 
+            <!--
             </div>
+            -->
 
             <!-- header -->
             <div class="flex bg-white p-2 border-gray-300 border-b h-16">
@@ -190,7 +198,7 @@
 
                 <!-- app info -->
                 <div v-if="!isShowingMobileSearch" class="my-auto leading-tight">
-                    <div class="font-bold">Meshtastic Map</div>
+                    <div class="font-bold">Florida Mesh Map</div>
                     <div class="text-sm">
                         Created by <a class="link" target="_blank" href="https://liamcottle.com">Liam Cottle</a>
                     </div>
@@ -358,7 +366,7 @@
                                 <!-- app info -->
                                 <div class="w-full mx-auto text-center">
                                     <img src="./icon.png" class="mx-auto w-16 h-16 rounded mb-1"/>
-                                    <h1 class="font-bold">Meshtastic Map</h1>
+                                    <h1 class="font-bold">Florida Mesh Map</h1>
                                     <h2>Created by <a class="link" target="_blank" href="https://liamcottle.com">Liam Cottle</a></h2>
                                     <div class="w-full mx-auto text-center space-x-1 mt-2">
 
@@ -399,7 +407,7 @@
 
                                 <!-- welcome -->
                                 <div class="bg-green-100 rounded p-2 border border-green-200">
-                                    👋 Welcome to my open source map of Meshtastic nodes heard on MQTT.
+                                     Welcome to Florida Mesh map of Meshtastic nodes heard on MQTT.
                                 </div>
 
                                 <!-- features -->
@@ -414,7 +422,9 @@
                                             <li>Click a node to see info such as telemetry graphs and traceroutes.</li>
                                             <li>Use the top right layers panel to show neighbours and waypoints.</li>
                                             <li>Use the settings button to configure the map to your liking.</li>
+                                            <!--
                                             <li>Have a feature request, or found a bug? <a class="link" target="_blank" href="https://github.com/liamcottle/meshtastic-map">Open an issue</a> on GitHub.</li>
+                                            -->
                                         </ul>
                                     </div>
                                 </div>
@@ -432,16 +442,14 @@
                                         </div>
                                         <div class="bg-gray-100 rounded p-2 border border-gray-200">
                                             <div class="font-semibold">What MQTT server should I use?</div>
+                                            <div>In most cases you do not need to configure a MQTT server at all as we are using dedicated MQTT Gateway nodes. Just enable the following under LoRa configuration</div>
                                             <ul class="list-disc list-inside">
-                                                <li>Address: mqtt.meshtastic.liamcottle.net</li>
-                                                <li>Username: uplink</li>
-                                                <li>Password: uplink</li>
-                                                <li>Encryption Enabled: Yes</li>
-                                                <li>JSON Output: No</li>
-                                                <li>TLS Enabled: No</li>
+                                                <li>Ignore MQTT: Disabled</li>
+                                                <li>OK to MQTT: Enabled</li>
                                             </ul>
-                                            <div>Please note, nodes can only uplink to this server. Downlink is disabled.</div>
-                                            <div>We suggest running dedicated nodes for uplinking to the map.</div>
+                                            <div>Please note, MQTT Gateway nodes can uplink and downlink. Without Ignore MQTT being disable you will not see anything from downlink.</div>
+                                            <div>If your out of range of a MQTT Gateway, or have a site that would be a good MQTT Gateway.</div>
+                                            <div>Please let use know on the <a target="_blank" href="https://discord.gg/floridamesh" class="link">Florida Mesh Discord</a>.</div>
                                         </div>
                                         <div class="bg-gray-100 rounded p-2 border border-gray-200">
                                             <div class="font-semibold">How do I remove my node from the map?</div>
@@ -449,7 +457,7 @@
                                             <div>Disable position reporting in your node to prevent it coming back.</div>
                                             <div>Use custom encryption keys so the public can't see your position data.</div>
                                             <div>If your node has v2.5 firmware or newer, we ignore packets if "OK to MQTT" is disabled.</div>
-                                            <div>To have your node removed now, please <a target="_blank" href="https://liamcottle.com/contact" class="link">contact me</a>.</div>
+                                            <div>To have your node removed now, please contact us at <a target="_blank" href="https://discord.gg/floridamesh" class="link">Florida Mesh Discord</a>.</div>
                                         </div>
                                         <div class="bg-gray-100 rounded p-2 border border-gray-200">
                                             <div class="font-semibold">How do I see neighbours a node heard?</div>
