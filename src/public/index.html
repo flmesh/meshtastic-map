@@ -2771,16 +2771,23 @@
         maxZoom: 21,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         attribution: 'Tiles &copy; Google | Data from <a target="_blank" href="https://meshtastic.org/docs/software/integrations/mqtt/">Meshtastic</a>'
-   
+    //});
+	
+	//var esriStreetsTileLayer = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+	//    maxZoom 19, // esri doesn't have tiles closer than this
+    //    attribution: 'Tiles &copy; <a href="https://developers.arcgis.com/documentation/mapping-apis-and-services/deployment/basemap-attribution/">Esri</a> | Data from <a target="_blank" href="https://meshtastic.org/docs/software/integrations/mqtt/">Meshtastic</a>'
+	
 	});
 
     var tileLayers = {
         "OpenStreetMap": openStreetMapTileLayer,
         "OpenTopoMap": openTopoMapTileLayer,
         "Esri Satellite": esriWorldImageryTileLayer,
+      //  "Esri Streets": esriStreetsTileLayer,
         "Google Satellite": googleSatelliteTileLayer,
         "Google Hybrid": googleHybridTileLayer,
     };
+
 
     // use tile layer based on config
     const selectedTileLayerName = getConfigMapSelectedTileLayer();
