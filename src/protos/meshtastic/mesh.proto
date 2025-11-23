@@ -826,6 +826,21 @@ enum HardwareModel {
   RAK3401 = 117;
 
   /*
+   * RAK6421 Hat+
+   */
+  RAK6421 = 118;
+
+  /*
+   * Elecrow ThinkNode M4
+   */
+  THINKNODE_M4 = 119;
+
+  /*
+   * Elecrow ThinkNode M6
+   */
+  THINKNODE_M6 = 120;
+  
+  /*
    * ------------------------------------------------------------------------------------------------------------------------------------------
    * Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
    * ------------------------------------------------------------------------------------------------------------------------------------------
@@ -1371,6 +1386,10 @@ message MeshPacket {
 
   /*
    * The (immediate) destination for this packet
+   * If the value is 4,294,967,295 (maximum value of an unsigned 32bit integer), this indicates that the packet was
+   * not destined for a specific node, but for a channel as indicated by the value of `channel` below.
+   * If the value is another, this indicates that the packet was destined for a specific
+   * node (i.e. a kind of "Direct Message" to this node) and not broadcast on a channel.
    */
   fixed32 to = 2;
 
