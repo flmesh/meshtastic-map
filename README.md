@@ -32,7 +32,7 @@ Liam's version of the map is available at https://meshtastic.liamcottle.net
 
 ## Features
 
-- [x] Connects to mqtt.areyoumeshingwith.us to collect nodes and metrics.
+- [x] Connects to `mqtt.areyoumeshingwith.us` to collect nodes and metrics.
 - [x] Shows nodes on the map if they have reported a valid position.
 - [x] Search bar to find nodes by ID, Hex ID, Short Name and Long Name.
 - [x] Hover over nodes on the map to see basic information and a preview image.
