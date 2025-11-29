@@ -232,3 +232,4 @@ The Meshtastic logo is the trademark of Meshtastic LLC.
 
 - https://meshtastic.org/docs/software/integrations/mqtt/
 - https://buf.build/meshtastic/protobufs/docs/main:meshtastic
+- https://github.com/liamcottle/meshtastic-map
