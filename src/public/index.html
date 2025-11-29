@@ -2776,6 +2776,11 @@
 	var CartoDark = L.tileLayer('http://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
 		attribution: 'Tiles &copy; Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL. | Data from <a target="_blank" href="https://meshtastic.org/docs/software/intergrations/mqtt/">Meshtastic</a>'
 	});
+	
+	var Cartovoyager = L.tileLayer('http://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+		attribution: 'Tiles &copy; Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL. | Data from <a target="_blank" href="https://meshtastic.org/docs/software/intergrations/mqtt/">Meshtastic</a>'
+	});
+	
 
     var tileLayers = {
         "OpenStreetMap": openStreetMapTileLayer,
@@ -2785,7 +2790,9 @@
         "Esri World Topo": esriWorldTopo,
         "Google Satellite": googleSatelliteTileLayer,
         "Google Hybrid": googleHybridTileLayer,
+		"CartoDb Voyager": Cartovoyager,
 		"CartoDb Dark Matter": CartoDark,
+		
     };
 
     // use tile layer based on config
