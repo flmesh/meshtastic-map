@@ -10,5 +10,6 @@
   "8": "CLIENT_HIDDEN",
   "9": "LOST_AND_FOUND",
   "10": "TAK_TRACKER",
-  "11": "ROUTER_LATE"
+  "11": "ROUTER_LATE",
+  "12": "CLIENT_BASE"
 }
