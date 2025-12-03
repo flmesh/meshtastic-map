@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package meshtastic;
 
-import "meshtastic/mesh.proto";
 import "meshtastic/config.proto";
+import "meshtastic/mesh.proto";
 
 option csharp_namespace = "Meshtastic.Protobufs";
 option go_package = "github.com/meshtastic/go/generated";
 option java_outer_classname = "MQTTProtos";
-option java_package = "com.geeksville.mesh";
+option java_package = "org.meshtastic.proto";
 option swift_prefix = "";
 
 /*
@@ -49,8 +49,8 @@ message MapReport {
   string short_name = 2;
 
   /*
-  * Role of the node that applies specific settings for a particular use-case
-  */
+   * Role of the node that applies specific settings for a particular use-case
+   */
   Config.DeviceConfig.Role role = 3;
 
   /*
@@ -64,19 +64,19 @@ message MapReport {
   string firmware_version = 5;
 
   /*
-  * The region code for the radio (US, CN, EU433, etc...)
-  */
+   * The region code for the radio (US, CN, EU433, etc...)
+   */
   Config.LoRaConfig.RegionCode region = 6;
 
   /*
-  * Modem preset used by the radio (LongFast, MediumSlow, etc...)
-  */
+   * Modem preset used by the radio (LongFast, MediumSlow, etc...)
+   */
   Config.LoRaConfig.ModemPreset modem_preset = 7;
 
   /*
-  * Whether the node has a channel with default PSK and name (LongFast, MediumSlow, etc...)
-  * and it uses the default frequency slot given the region and modem preset.
-  */
+   * Whether the node has a channel with default PSK and name (LongFast, MediumSlow, etc...)
+   * and it uses the default frequency slot given the region and modem preset.
+   */
   bool has_default_channel = 8;
 
   /*
@@ -103,4 +103,10 @@ message MapReport {
    * Number of online nodes (heard in the last 2 hours) this node has in its list that were received locally (not via MQTT)
    */
   uint32 num_online_local_nodes = 13;
+
+  /*
+   * User has opted in to share their location (map report) with the mqtt server
+   * Controlled by map_report.should_report_location
+   */
+  bool has_opted_report_location = 14;
 }

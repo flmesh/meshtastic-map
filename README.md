@@ -1,4 +1,4 @@
-<h2 align="center">Meshtastic Map</h2>
+<h2 align="center">Florida Meshtastic Map</h2>
 
 <p align="center">
 <a href="https://discord.gg/K55zeZyHKK"><img src="https://img.shields.io/badge/Discord-Liam%20Cottle's%20Discord-%237289DA?style=flat&logo=discord" alt="discord"/></a>
@@ -8,11 +8,11 @@
 <a href="./donate.md"><img src="https://img.shields.io/badge/Donate%20Bitcoin-bc1qy22smke8n4c54evdxmp7lpy9p0e6m9tavtlg2q-%23FF9900?style=flat&logo=bitcoin" alt="donate bitcoin"/></a>
 </p>
 
-A map of all Meshtastic nodes heard via MQTT.
+A map of all Meshtastic nodes heard via MQTT in Florida.
 
-My version of the map is available at https://meshtastic.liamcottle.net
+Liam's version of the map is available at https://meshtastic.liamcottle.net
 
-> Check out my new Meshtastic Web Client: [MeshTXT](https://github.com/liamcottle/meshtxt)
+> Check out Liam's new Meshtastic Web Client: [MeshTXT](https://github.com/liamcottle/meshtxt)
 
 <img src="./screenshot.png">
 
@@ -32,7 +32,7 @@ My version of the map is available at https://meshtastic.liamcottle.net
 
 ## Features
 
-- [x] Connects to mqtt.meshtastic.org to collect nodes and metrics.
+- [x] Connects to `mqtt.areyoumeshingwith.us` to collect nodes and metrics.
 - [x] Shows nodes on the map if they have reported a valid position.
 - [x] Search bar to find nodes by ID, Hex ID, Short Name and Long Name.
 - [x] Hover over nodes on the map to see basic information and a preview image.
@@ -61,7 +61,7 @@ My version of the map is available at https://meshtastic.liamcottle.net
 Clone the project repo.
 
 ```
-git clone https://github.com/liamcottle/meshtastic-map
+git clone https://github.com/flmesh/meshtastic-map
 cd meshtastic-map
 ```
 
@@ -121,6 +121,9 @@ npx prisma migrate dev
 You will now need to restart the `index.js` and `mqtt.js` scripts.
 
 ## MQTT Collector
+
+> Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project.
+You will need to obtain these files yourself to be able to use the MQTT Collector.
 
 By default, the [MQTT Collector](./src/mqtt.js) connects to the public Meshtastic MQTT server.
 Alternatively, you may provide the relevant options shown in the help section below to connect to your own MQTT server along with your own decryption keys.
@@ -229,3 +232,4 @@ The Meshtastic logo is the trademark of Meshtastic LLC.
 
 - https://meshtastic.org/docs/software/integrations/mqtt/
 - https://buf.build/meshtastic/protobufs/docs/main:meshtastic
+- https://github.com/liamcottle/meshtastic-map
