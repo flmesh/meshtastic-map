@@ -495,6 +495,8 @@
                                         <div>The Meshtastic logo is the trademark of Meshtastic LLC.</div>
                                         <div>Street Map tiles provided by <a class="link" target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></div>
 										<div>Aerial Map tiles provided by <a class="link" target="_blank" href="https://developers.arcgis.com/documentation/esri-and-data-attribution/">Esri</a></div>
+                                        <div>Global weather radar provided by <a class="link" target="_blank" href="https://www.rainviewer.com/">RainViewer</a></div>
+                                        <div>US weather radar provided by the <a class="link" target="_blank" href="https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/">Iowa Environmental Mesonet</a>, using NEXRAD Level III base reflectivity data courtesy of NOAA/NWS RIDGE</div>
                                     </div>
                                 </div>
 
@@ -2836,6 +2838,71 @@
     });
     var waypointsLayerGroup = new L.LayerGroup();
     var nodePositionHistoryLayerGroup = new L.LayerGroup();
+    var weatherRadarLayerGroup = new L.LayerGroup();
+    var weatherRadarUsLayerGroup = new L.LayerGroup();
+
+    // weather radar - global (RainViewer) - shows the latest precipitation radar composite as a map overlay
+    // https://www.rainviewer.com/api/weather-maps-api.html - free, no api key required
+    // covers the whole world, but rainviewer's own docs cap meaningful detail at zoom 7
+    var weatherRadarTileLayer = null;
+    function refreshWeatherRadarLayer() {
+        window.axios.get('https://api.rainviewer.com/public/weather-maps.json').then((response) => {
+            const data = response.data;
+            const frames = (data.radar && data.radar.past) || [];
+            const latestFrame = frames[frames.length - 1];
+            if(!latestFrame){
+                return;
+            }
+            // 512px tiles render sharper than the 256px default since rainviewer samples more
+            // pixels per tile from the same underlying radar mosaic
+            const tileUrl = `${data.host}${latestFrame.path}/512/{z}/{x}/{y}/2/1_1.png`;
+            if(weatherRadarTileLayer){
+                weatherRadarLayerGroup.removeLayer(weatherRadarTileLayer);
+            }
+            weatherRadarTileLayer = L.tileLayer(tileUrl, {
+                opacity: 0.6,
+                zIndex: 500,
+                // rainviewer's documented max zoom is 7 - stop requesting new tiles there and let
+                // leaflet smoothly upscale the last real tile via css instead of rainviewer sending
+                // back its own blurrier upscaled tiles
+                maxNativeZoom: 7,
+                maxZoom: 22,
+                attribution: 'Weather radar &copy; <a href="https://www.rainviewer.com/" target="_blank">RainViewer</a>',
+            });
+            weatherRadarLayerGroup.addLayer(weatherRadarTileLayer);
+        }).catch((error) => {
+            console.error('failed to refresh weather radar layer', error);
+        });
+    }
+
+    // load the initial radar frame, then keep it fresh (rainviewer publishes a new composite roughly every 10 minutes)
+    refreshWeatherRadarLayer();
+    setInterval(refreshWeatherRadarLayer, 10 * 60 * 1000);
+
+    // weather radar - US only (Iowa Environmental Mesonet NEXRAD mosaic) - much higher native resolution
+    // than rainviewer's global composite (built from NWS Level III ~1km reflectivity data), but only has
+    // coverage over the continental US. https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/
+    var weatherRadarUsTileLayer = null;
+    function refreshWeatherRadarUsLayer() {
+        // "900913" is iem's fixed layer name for the always-current, web-mercator-ready mosaic tiles -
+        // cache-bust with a timestamp query param since the underlying data refreshes every 5 minutes
+        // but the tile url itself never changes
+        const tileUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?_=${Date.now()}`;
+        if(weatherRadarUsTileLayer){
+            weatherRadarUsLayerGroup.removeLayer(weatherRadarUsTileLayer);
+        }
+        weatherRadarUsTileLayer = L.tileLayer(tileUrl, {
+            opacity: 0.6,
+            zIndex: 500,
+            maxZoom: 22,
+            attribution: 'Weather radar &copy; <a href="https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/" target="_blank">Iowa Environmental Mesonet</a>, NWS RIDGE',
+        });
+        weatherRadarUsLayerGroup.addLayer(weatherRadarUsTileLayer);
+    }
+
+    // load the initial radar frame, then keep it fresh (iem's mosaic updates every 5 minutes)
+    refreshWeatherRadarUsLayer();
+    setInterval(refreshWeatherRadarUsLayer, 5 * 60 * 1000);
 
     // create icons
     var iconMqttConnected = L.divIcon({
@@ -2901,6 +2968,8 @@
             "Neighbours": neighboursLayerGroup,
             "Waypoints": waypointsLayerGroup,
             "Position History": nodePositionHistoryLayerGroup,
+            "RainViewer Radar": weatherRadarLayerGroup,
+            "US NEXRAD Radar": weatherRadarUsLayerGroup,
         },
     }, {
         // make the "Nodes" group exclusive (use radio inputs instead of checkbox)
@@ -2923,6 +2992,12 @@
     }
     if(enabledOverlayLayers.includes("Position History")){
         nodePositionHistoryLayerGroup.addTo(map);
+    }
+    if(enabledOverlayLayers.includes("RainViewer Radar")){
+        weatherRadarLayerGroup.addTo(map);
+    }
+    if(enabledOverlayLayers.includes("US NEXRAD Radar")){
+        weatherRadarUsLayerGroup.addTo(map);
     }
 
     // update config when map overlay is added
