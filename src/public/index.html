@@ -3219,6 +3219,23 @@
         if(snr < 0) return "#dc2626"; // bad
     }
 
+    // a node's "neighbours" is a single snapshot from its last NEIGHBORINFO_APP packet, overwritten
+    // in place whenever a fresh one arrives (see mqtt.js). if a node stops sending them (module
+    // disabled, reconfigured, etc) while still transmitting other packet types, its neighbours list
+    // is never cleared and just sits there indefinitely - so it must be checked for staleness
+    // separately from whether the node itself looks online. reuses the same "offline age" setting
+    // used for the node online/offline icon, so there's one consistent staleness cutoff.
+    function areNodeNeighboursStale(node, now, configNodesOfflineAgeInSeconds) {
+        if(!configNodesOfflineAgeInSeconds){
+            return false; // staleness cutoff disabled
+        }
+        if(!node.neighbours_updated_at){
+            return true; // no timestamp to trust
+        }
+        const neighboursAgeInMillis = now.diff(moment(node.neighbours_updated_at));
+        return neighboursAgeInMillis > configNodesOfflineAgeInSeconds * 1000;
+    }
+
     function cleanUpNodeNeighbours() {
 
         // close tooltips and popups
@@ -3281,6 +3298,11 @@
 
         // show overlay for node neighbours
         window._onShowNodeNeighboursWeHeardClick(node);
+
+        // don't show neighbours if this node hasn't sent a fresh neighbour info packet recently
+        if(areNodeNeighboursStale(node, moment(), getConfigNodesOfflineAgeInSeconds())){
+            return;
+        }
 
         // ensure we have neighbours to show
         const neighbours = node.neighbours ?? [];
@@ -3388,8 +3410,15 @@
         window._onShowNodeNeighboursHeardUsClick(node);
 
         // find all nodes that have us as a neighbour
+        const now = moment();
+        const configNodesOfflineAgeInSeconds = getConfigNodesOfflineAgeInSeconds();
         const neighbourNodeInfos = [];
         for(const nodeThatMayHaveHeardUs of nodes){
+
+            // don't trust this node's neighbour claims if it hasn't sent a fresh neighbour info packet recently
+            if(areNodeNeighboursStale(nodeThatMayHaveHeardUs, now, configNodesOfflineAgeInSeconds)){
+                continue;
+            }
 
             // find our node in this nodes neighbours
             const nodeNeighbours = nodeThatMayHaveHeardUs.neighbours ?? [];
@@ -3662,7 +3691,7 @@
 
             // add node neighbours
             var polylineOffset = 0;
-            const neighbours = node.neighbours ?? [];
+            const neighbours = areNodeNeighboursStale(node, now, configNodesOfflineAgeInSeconds) ? [] : (node.neighbours ?? []);
             for(const neighbour of neighbours){
 
                 // fixme: skipping zero snr? saw some crazy long neighbours with zero snr...
