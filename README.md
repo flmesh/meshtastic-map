@@ -206,6 +206,20 @@ This will:
 - Start the Map UI.
 - Expose the map on port 8080.
 
+### Ports
+
+The host ports published by `docker compose up` can be remapped with environment variables (e.g. in a `.env` file, or your platform's environment variable settings):
+
+| Variable   | Maps to                         | Default |
+|------------|----------------------------------|---------|
+| `MAP_PORT` | Map UI (container port `8080`)  | `8080`  |
+| `DB_PORT`  | MariaDB (container port `3306`) | `3306`  |
+
+```
+MAP_PORT=9090
+DB_PORT=3307
+```
+
 ## Testing
 
 To execute unit tests, run the following;

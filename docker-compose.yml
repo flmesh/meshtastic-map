@@ -35,7 +35,7 @@ services:
     container_name: database
     image: bitnami/mariadb
     ports:
-      - 3306:3306/tcp
+      - ${DB_PORT:-3306}:3306/tcp
     environment:
       MARIADB_DATABASE: "meshtastic-map"
       MARIADB_ROOT_PASSWORD: "password"
