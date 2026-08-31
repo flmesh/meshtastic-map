@@ -122,8 +122,16 @@ You will now need to restart the `index.js` and `mqtt.js` scripts.
 
 ## MQTT Collector
 
-> Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project.
+> Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project, and must never be committed to this repo's git history.
 You will need to obtain these files yourself to be able to use the MQTT Collector.
+>
+> If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) clones them fresh into `src/external/protobufs` on container start if they aren't already present. If you're running `src/mqtt.js` directly (not via Docker), clone them yourself into the same path;
+>
+> ```
+> git clone https://github.com/meshtastic/protobufs src/external/protobufs
+> ```
+>
+> If you clone and install the Meshtastic protobufs, your use of those files will be subject to the GPLv3 license. This does not change the license of this project being MIT — only the parts you add from the Meshtastic project are covered under GPLv3.
 
 By default, the [MQTT Collector](./src/mqtt.js) connects to the public Meshtastic MQTT server.
 Alternatively, you may provide the relevant options shown in the help section below to connect to your own MQTT server along with your own decryption keys.
@@ -206,19 +214,45 @@ This will:
 - Start the Map UI.
 - Expose the map on port 8080.
 
-### Ports
+### Configuration
 
-The host ports published by `docker compose up` can be remapped with environment variables (e.g. in a `.env` file, or your platform's environment variable settings):
+The stack is configured entirely with environment variables (e.g. in a `.env` file next to `docker-compose.yml`, or your platform's environment variable settings):
 
-| Variable   | Maps to                         | Default |
-|------------|----------------------------------|---------|
-| `MAP_PORT` | Map UI (container port `8080`)  | `8080`  |
-| `DB_PORT`  | MariaDB (container port `3306`) | `3306`  |
+| Variable   | Description                                                                            | Default                                                 |
+|------------|------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| `MAP_PORT` | Host port the Map UI is published on (container always listens on `8080`)              | `8080`                                                    |
+| `DB_PORT`  | Host port MariaDB is published on (container always listens on `3306`)                 | `3306`                                                    |
+| `MQTT_OPTS` | Full CLI flag string passed to [`src/mqtt.js`](./src/mqtt.js) — your broker, credentials, topic, decryption keys, collect flags, etc. See [MQTT Collector](#mqtt-collector) above for the full list of options. | *(empty — connects to the public `mqtt.meshtastic.org`)* |
+| `MAP_OPTS`  | Full CLI flag string passed to [`src/index.js`](./src/index.js), e.g. `--port 8123`.   | *(empty)*                                                 |
+
+For example, to remap ports and connect to your own MQTT server:
 
 ```
 MAP_PORT=9090
 DB_PORT=3307
+MQTT_OPTS=--mqtt-broker-url mqtt://mqtt.example.com --mqtt-username myuser --mqtt-password mypass --mqtt-topic msh/US/FL/# --collect-neighbour-info --collect-waypoints --collect-map-reports
 ```
+
+> Note: `--mqtt-topic` values need a trailing `/#` wildcard to match anything below that topic level (e.g. `msh/US/FL/#`, not `msh/US/FL`) — MQTT topic filters are exact-match without one.
+
+### Portainer
+
+To deploy this on a remote [Portainer](https://www.portainer.io/) instance as a Stack:
+
+1. In Portainer, go to **Stacks** → **Add stack**.
+2. Give it a name (e.g. `meshtastic-map`).
+3. Under **Build method**, choose **Repository**, and point it at this repo (`https://github.com/flmesh/meshtastic-map`), and the branch you want to deploy. This lets Portainer pull `docker-compose.yml` directly and rebuild it on redeploy — you don't need Docker installed anywhere but the target host.
+   - Alternatively, choose **Web editor** and paste the contents of `docker-compose.yml` directly if you'd rather not link a repo. If you go this route, remember to re-paste it whenever `docker-compose.yml` changes upstream — Portainer won't pick up repo changes on its own with this method.
+4. Under **Environment variables**, add any of the variables from the [Configuration](#configuration) table above that you need (at minimum, `MQTT_OPTS` with your broker details).
+5. Click **Deploy the stack**. Portainer will build the image, start MariaDB, run migrations, then start the MQTT collector and Map UI.
+6. Once healthy, the map is reachable at `http://<host-address>:<MAP_PORT>` (`8080` by default).
+
+To update later: **Pull and redeploy** if deployed via Repository, or edit-and-redeploy if using the Web editor. Either way, any environment variables you set are preserved across redeploys.
+
+If you're putting this behind a reverse proxy / tunnel (e.g. Pangolin, Cloudflare Tunnel, Nginx Proxy Manager) rather than exposing `MAP_PORT` directly:
+
+- Point the proxy's target at the **container name and internal port** (`meshtastic-map:8080`), not the host's published port — this requires attaching the proxy's container to the same Docker network as this stack (`docker network connect <this-stack's-network> <proxy-container>`), and is generally both simpler and more secure than exposing `MAP_PORT` publicly.
+- If your proxy has a "health check" feature, double check it re-reads the target address/port after you edit it — some proxies cache a stale health-check target separately from the routing target when you change it in place, which can make a resource look "unhealthy" even though it's actually routing fine. Deleting and re-adding the target from scratch is a reliable way to force a fresh health check.
 
 ## Testing
 
