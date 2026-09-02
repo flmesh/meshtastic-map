@@ -2750,13 +2750,15 @@
         [100, 500], // bottom right
     ];
 
-    // create map positioned over AU and NZ
+    // create map positioned over Florida
+    // (longitude is +360 to match the wrap applied to node marker longitudes below,
+    // keeping it within the shifted [70, 500] maxBounds range)
     var map = L.map('map', {
         maxBounds: bounds,
     }).setView([
-        -15,
-        150,
-    ], 2);
+        27.8,
+        -81.7 + 360,
+    ], 6);
 
     // remove leaflet link
     map.attributionControl.setPrefix('');
@@ -2827,12 +2829,13 @@
     // create layer groups
     var nodesLayerGroup = new L.LayerGroup();
     var neighboursLayerGroup = new L.LayerGroup();
+    var infraConnectionsLayerGroup = new L.LayerGroup();
     var nodeNeighboursLayerGroup = new L.LayerGroup();
     var nodesClusteredLayerGroup = L.markerClusterGroup({
         showCoverageOnHover: false,
         disableClusteringAtZoom: 10, // zoom level where node clustering is disabled
     });
-    var nodesRouterLayerGroup = L.markerClusterGroup({
+    var nodesInfraLayerGroup = L.markerClusterGroup({
         showCoverageOnHover: false,
         disableClusteringAtZoom: 10, // zoom level where node clustering is disabled
     });
@@ -2959,13 +2962,14 @@
     L.control.groupedLayers(tileLayers, {
         "Nodes": {
             "All": nodesLayerGroup,
-            "Routers": nodesRouterLayerGroup,
+            "Infrastructure Sites": nodesInfraLayerGroup,
             "Clustered": nodesClusteredLayerGroup,
             "None": new L.LayerGroup(),
         },
         "Overlays": {
             "Legend": legendLayerGroup,
             "Neighbours": neighboursLayerGroup,
+            "Infra Connections": infraConnectionsLayerGroup,
             "Waypoints": waypointsLayerGroup,
             "Position History": nodePositionHistoryLayerGroup,
             "RainViewer Radar": weatherRadarLayerGroup,
@@ -2986,6 +2990,9 @@
     }
     if(enabledOverlayLayers.includes("Neighbours")){
         neighboursLayerGroup.addTo(map);
+    }
+    if(enabledOverlayLayers.includes("Infra Connections")){
+        infraConnectionsLayerGroup.addTo(map);
     }
     if(enabledOverlayLayers.includes("Waypoints")){
         waypointsLayerGroup.addTo(map);
@@ -3137,11 +3144,12 @@
     function clearAllNodes() {
         nodesLayerGroup.clearLayers();
         nodesClusteredLayerGroup.clearLayers();
-        nodesRouterLayerGroup.clearLayers();
+        nodesInfraLayerGroup.clearLayers();
     }
 
     function clearAllNeighbours() {
         neighboursLayerGroup.clearLayers();
+        infraConnectionsLayerGroup.clearLayers();
     }
 
     function clearAllWaypoints() {
@@ -3560,6 +3568,13 @@
         return millisecondsSinceNodeLastUplinkedToMqtt < configNodesDisconnectedAgeInSeconds * 1000;
     }
 
+    // infrastructure sites - router-family roles, excluding CLIENT_BASE (a regular
+    // client role, not a router role)
+    const infraRoleNames = ["ROUTER", "ROUTER_LATE", "REPEATER", "ROUTER_CLIENT"];
+    function isNodeInfra(node) {
+        return infraRoleNames.includes(node.role_name);
+    }
+
     function onNodesUpdated(updatedNodes) {
 
         // clear nodes cache
@@ -3637,12 +3652,9 @@
             marker.addTo(nodesLayerGroup);
             nodesClusteredLayerGroup.addLayer(marker);
 
-            // add markers for routers and repeaters to routers layer group
-            if(node.role_name === "ROUTER"
-                || node.role_name === "ROUTER_CLIENT"
-                || node.role_name === "ROUTER_LATE"
-                || node.role_name === "REPEATER"){
-                nodesRouterLayerGroup.addLayer(marker);
+            // add markers for infrastructure sites (router-family roles) to infra layer group
+            if(isNodeInfra(node)){
+                nodesInfraLayerGroup.addLayer(marker);
             }
 
             // show tooltip on desktop only
@@ -3758,6 +3770,28 @@
                         // close tooltip on click to prevent tooltip and popup showing at same time
                         event.target.closeTooltip();
                     });
+
+                    // if both ends of this connection are infra nodes, also draw it into the
+                    // dedicated Infra Connections overlay so it can be viewed on its own
+                    if(isNodeInfra(node) && isNodeInfra(neighbourNode)){
+                        const infraLine = L.polyline([
+                            currentNode.getLatLng(),
+                            neighbourNodeMarker.getLatLng(),
+                        ], {
+                            color: '#2563eb',
+                            opacity: 0.75,
+                        }).addTo(infraConnectionsLayerGroup);
+
+                        infraLine.bindTooltip(tooltip, {
+                            sticky: true,
+                            opacity: 1,
+                            interactive: true,
+                        })
+                        .bindPopup(tooltip)
+                        .on('click', function(event) {
+                            event.target.closeTooltip();
+                        });
+                    }
 
                 }
             }
@@ -4083,7 +4117,7 @@
             `<br/>MQTT: ${mqttStatus}` +
             (node.num_online_local_nodes != null ? `<br/>Local Nodes Online: ${node.num_online_local_nodes}` : '') +
             (node.position_precision != null && node.position_precision !== 32 ? `<br/>Position Precision: ${formatPositionPrecision(node.position_precision)}` : '') +
-            `<br/><br/>Role: ${node.role_name}` +
+            `<br/><br/>Role: ${node.role_name}${isNodeInfra(node) ? ' <span class="text-green-700">(Infra)</span>' : ''}` +
             `<br/>Hardware: ${node.hardware_model_name}` +
             (node.firmware_version != null ? `<br/>Firmware: ${node.firmware_version}` : '') +
             (node.region_name != null ? `<br/>LoRa Region: ${node.region_name} (${loraFrequencyRange})` : '') +
