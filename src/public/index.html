@@ -3223,8 +3223,9 @@
     }
 
     function getColourForSnr(snr) {
-        if(snr >= 0) return "#16a34a"; // good
-        if(snr < 0) return "#dc2626"; // bad
+        if(snr >= 0) return "#16a34a"; // great
+        if(snr >= -7.5) return "#ca8a04"; // poor - LoRa can still hear well below the noise floor
+        return "#dc2626"; // bad
     }
 
     // renders a "<nodeA> -> <nodeB>" direction's recent snr readings, each colour coded by quality
@@ -3242,7 +3243,7 @@
 
     // fetches recent snr readings between two nodes and appends them to a line's popup the first
     // time it's opened (not upfront, to keep line drawing itself synchronous/fast)
-    function enrichLinePopupWithSnrHistory(line, nodeId, otherNodeId, baseTooltipHtml) {
+    function enrichLinePopupWithSnrHistory(line, nodeId, otherNodeId, nodeLabel, otherNodeLabel, baseTooltipHtml) {
         let loaded = false;
         line.on('popupopen', function() {
             if(loaded){
@@ -3251,8 +3252,8 @@
             loaded = true;
             window.axios.get(`/api/v1/nodes/${nodeId}/edges/${otherNodeId}`).then((response) => {
                 const historyHtml = `<br/><br/><b>Recent Readings</b><br/>`
-                    + renderSnrHistoryDirection(`${nodeId} &rarr; ${otherNodeId}`, response.data.direction_a_to_b)
-                    + renderSnrHistoryDirection(`${otherNodeId} &rarr; ${nodeId}`, response.data.direction_b_to_a);
+                    + renderSnrHistoryDirection(`${nodeLabel} &rarr; ${otherNodeLabel}`, response.data.direction_a_to_b)
+                    + renderSnrHistoryDirection(`${otherNodeLabel} &rarr; ${nodeLabel}`, response.data.direction_b_to_a);
                 line.setPopupContent(baseTooltipHtml + historyHtml);
             }).catch(() => {
                 // leave the popup showing just the base tooltip content on failure
@@ -3803,7 +3804,7 @@
                         // close tooltip on click to prevent tooltip and popup showing at same time
                         event.target.closeTooltip();
                     });
-                    enrichLinePopupWithSnrHistory(line, node.node_id, neighbourNode.node_id, tooltip);
+                    enrichLinePopupWithSnrHistory(line, node.node_id, neighbourNode.node_id, escapeString(node.short_name), escapeString(neighbourNode.short_name), tooltip);
 
                     // if both ends of this connection are infra nodes, also draw it into the
                     // dedicated Infra Connections overlay so it can be viewed on its own
@@ -3825,7 +3826,7 @@
                         .on('click', function(event) {
                             event.target.closeTooltip();
                         });
-                        enrichLinePopupWithSnrHistory(infraLine, node.node_id, neighbourNode.node_id, tooltip);
+                        enrichLinePopupWithSnrHistory(infraLine, node.node_id, neighbourNode.node_id, escapeString(node.short_name), escapeString(neighbourNode.short_name), tooltip);
                     }
 
                 }

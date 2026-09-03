@@ -122,7 +122,7 @@ You will now need to restart the `index.js` and `mqtt.js` scripts.
 
 ## MQTT Collector
 
-> Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project, and must never be committed to this repo's git history.
+> Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project.
 You will need to obtain these files yourself to be able to use the MQTT Collector.
 >
 > If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) clones them fresh into `src/external/protobufs` on container start if they aren't already present. If you're running `src/mqtt.js` directly (not via Docker), clone them yourself into the same path;
