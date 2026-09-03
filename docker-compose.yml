@@ -39,7 +39,12 @@ services:
     volumes:
       - database_data:/bitnami/mariadb
     healthcheck:
-      test: ['CMD', '/opt/bitnami/scripts/mariadb/healthcheck.sh']
+      # bitnami's own healthcheck script currently fails with "TLS/SSL error: method not
+      # supported" on some image builds (their mysqladmin/mariadb-admin client attempts TLS
+      # even over the local unix socket, and the image's TLS library rejects it) - ping over
+      # the socket with TLS explicitly disabled instead, falling back to their original script
+      # so this keeps working with no changes needed if/when that gets fixed upstream
+      test: ['CMD-SHELL', 'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" mariadb-admin --socket=/opt/bitnami/mariadb/tmp/mysql.sock -uroot --skip-ssl ping || /opt/bitnami/scripts/mariadb/healthcheck.sh']
       interval: 15s
       timeout: 5s
       retries: 6
