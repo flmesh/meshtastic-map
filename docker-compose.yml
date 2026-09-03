@@ -2,7 +2,6 @@ services:
 
   # listens to mqtt packets and saves to database
   meshtastic-mqtt:
-    container_name: meshtastic-mqtt
     depends_on:
       database:
         condition: service_healthy
@@ -16,7 +15,6 @@ services:
 
   # runs the web map ui
   meshtastic-map:
-    container_name: meshtastic-map
     depends_on:
       database:
         condition: service_healthy
@@ -32,7 +30,6 @@ services:
 
   # runs the database to store everything from mqtt
   database:
-    container_name: database
     image: bitnami/mariadb
     ports:
       - ${DB_PORT:-3306}:3306/tcp
