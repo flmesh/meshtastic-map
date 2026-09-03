@@ -131,6 +131,10 @@ app.get('/api', async (req, res) => {
             "description": "Neighbours for a meshtastic node",
         },
         {
+            "path": "/api/v1/nodes/:nodeId/edges/:otherNodeId",
+            "description": "Recent NEIGHBORINFO_APP/TRACEROUTE_APP edges between two meshtastic nodes, aggregated per direction",
+        },
+        {
             "path": "/api/v1/nodes/:nodeId/traceroutes",
             "description": "Trace routes for a meshtastic node",
         },
@@ -482,6 +486,74 @@ app.get('/api/v1/nodes/:nodeId/neighbours', async (req, res) => {
                     updated_at: nodeThatHeardUs.neighbours_updated_at,
                 };
             }),
+        });
+
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({
+            message: "Something went wrong, try again later.",
+        });
+    }
+});
+
+// aggregates a list of edges (all for the same direction) into an average snr, total
+// count, and the most recent readings, deduplicated by packet_id (a single packet can
+// produce the same edge more than once, e.g. gossiped over mqtt by multiple gateways)
+function aggregateEdgesForDirection(edges) {
+    const seenPacketIds = new Set();
+    const deduplicated = edges.filter((edge) => {
+        if(seenPacketIds.has(edge.packet_id.toString())){
+            return false;
+        }
+        seenPacketIds.add(edge.packet_id.toString());
+        return true;
+    });
+
+    const avgSnrDb = deduplicated.length > 0
+        ? deduplicated.reduce((sum, edge) => sum + (edge.snr / 4), 0) / deduplicated.length
+        : null;
+
+    return {
+        avg_snr_db: avgSnrDb,
+        total_count: deduplicated.length,
+        last_edges: deduplicated.slice(0, 5).map((edge) => {
+            return {
+                snr_db: edge.snr / 4,
+                created_at: edge.created_at,
+                source: edge.source,
+            };
+        }),
+    };
+}
+
+// GET last 5 edges (in each direction) between two specific nodes, with a color-codeable
+// average snr per direction - used to enrich the neighbour/infra connection line popups
+app.get('/api/v1/nodes/:nodeId/edges/:otherNodeId', async (req, res) => {
+    try {
+
+        const nodeId = parseInt(req.params.nodeId);
+        const otherNodeId = parseInt(req.params.otherNodeId);
+
+        const edges = await prisma.edge.findMany({
+            where: {
+                OR: [
+                    { from_node_id: nodeId, to_node_id: otherNodeId },
+                    { from_node_id: otherNodeId, to_node_id: nodeId },
+                ],
+            },
+            orderBy: [
+                { created_at: 'desc' },
+                { packet_id: 'desc' },
+            ],
+            take: 100, // enough recent edges to comfortably dedupe down to 5 per direction
+        });
+
+        const edgesAToB = edges.filter((edge) => edge.from_node_id.toString() === nodeId.toString());
+        const edgesBToA = edges.filter((edge) => edge.from_node_id.toString() === otherNodeId.toString());
+
+        res.json({
+            direction_a_to_b: aggregateEdgesForDirection(edgesAToB),
+            direction_b_to_a: aggregateEdgesForDirection(edgesBToA),
         });
 
     } catch(err) {

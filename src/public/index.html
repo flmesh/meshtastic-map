@@ -3227,6 +3227,39 @@
         if(snr < 0) return "#dc2626"; // bad
     }
 
+    // renders a "<nodeA> -> <nodeB>" direction's recent snr readings, each colour coded by quality
+    function renderSnrHistoryDirection(label, direction) {
+        if(!direction || direction.total_count === 0){
+            return `<div><b>${label}</b>: no recent readings</div>`;
+        }
+        const readings = direction.last_edges.slice(0, 3).map((edge) => {
+            const colour = getColourForSnr(edge.snr_db);
+            return `<span style="color:${colour}">${edge.snr_db.toFixed(1)}dB</span> (${moment(new Date(edge.created_at)).fromNow()})`;
+        }).join('<br/>&nbsp;&nbsp;');
+        return `<div><b>${label}</b>: avg ${direction.avg_snr_db.toFixed(1)}dB over ${direction.total_count} reading${direction.total_count === 1 ? '' : 's'}`
+            + `<br/>&nbsp;&nbsp;${readings}</div>`;
+    }
+
+    // fetches recent snr readings between two nodes and appends them to a line's popup the first
+    // time it's opened (not upfront, to keep line drawing itself synchronous/fast)
+    function enrichLinePopupWithSnrHistory(line, nodeId, otherNodeId, baseTooltipHtml) {
+        let loaded = false;
+        line.on('popupopen', function() {
+            if(loaded){
+                return;
+            }
+            loaded = true;
+            window.axios.get(`/api/v1/nodes/${nodeId}/edges/${otherNodeId}`).then((response) => {
+                const historyHtml = `<br/><br/><b>Recent Readings</b><br/>`
+                    + renderSnrHistoryDirection(`${nodeId} &rarr; ${otherNodeId}`, response.data.direction_a_to_b)
+                    + renderSnrHistoryDirection(`${otherNodeId} &rarr; ${nodeId}`, response.data.direction_b_to_a);
+                line.setPopupContent(baseTooltipHtml + historyHtml);
+            }).catch(() => {
+                // leave the popup showing just the base tooltip content on failure
+            });
+        });
+    }
+
     // a node's "neighbours" is a single snapshot from its last NEIGHBORINFO_APP packet, overwritten
     // in place whenever a fresh one arrives (see mqtt.js). if a node stops sending them (module
     // disabled, reconfigured, etc) while still transmitting other packet types, its neighbours list
@@ -3770,6 +3803,7 @@
                         // close tooltip on click to prevent tooltip and popup showing at same time
                         event.target.closeTooltip();
                     });
+                    enrichLinePopupWithSnrHistory(line, node.node_id, neighbourNode.node_id, tooltip);
 
                     // if both ends of this connection are infra nodes, also draw it into the
                     // dedicated Infra Connections overlay so it can be viewed on its own
@@ -3791,6 +3825,7 @@
                         .on('click', function(event) {
                             event.target.closeTooltip();
                         });
+                        enrichLinePopupWithSnrHistory(infraLine, node.node_id, neighbourNode.node_id, tooltip);
                     }
 
                 }
