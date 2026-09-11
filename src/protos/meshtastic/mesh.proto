@@ -356,14 +356,14 @@ enum HardwareModel {
   RAK11310 = 26;
 
   /*
-   * Makerfabs SenseLoRA Receiver (RP2040 + RFM96)
+   * Makerfabs Tracker Reserved
    */
-  SENSELORA_RP2040 = 27;
+  MAKERFABS_TRACKER = 27;
 
   /*
-   * Makerfabs SenseLoRA Industrial Monitor (ESP32-S3 + RFM96)
+   * Makerfabs Reserved
    */
-  SENSELORA_S3 = 28;
+  MAKERFABS_RESERVED = 28;
 
   /*
    * Canary Radio Company - CanaryOne: https://canaryradio.io/products/canaryone
@@ -876,10 +876,10 @@ enum HardwareModel {
   HELTEC_MESH_NODE_T096 = 127;
 
   /*
-   * Seeed studio T1000-E Pro tracker card. NRF52840 w/ LR2021 radio,
+   * Seeed studio Mesh Tracker X1card. NRF52840 w/ LR2021 radio,
    * GPS, button, buzzer, and sensors.
    */
-  TRACKER_T1000_E_PRO = 128;
+  MESH_TRACKER_X1 = 128;
 
   /*
    * Elecrow ThinkNode M7, M8 and M9
@@ -912,6 +912,56 @@ enum HardwareModel {
    * Lilygo T-Echo Card
    */
   T_ECHO_CARD = 136;
+
+  /*
+   * Seeed Tracker L2
+   */
+  SEEED_WIO_TRACKER_L2 = 137;
+
+  /*
+   * Elecrow CrowPanel Advance P4 models, ESP32-P4 and TFT with SX1262 radio plugin
+   */
+  CROWPANEL_P4 = 138;
+
+  /*
+   * Heltec Mesh Tower V2
+   */
+  HELTEC_MESH_TOWER_V2 = 139;
+
+  /*
+   * Meshnology W10
+   */
+  MESHNOLOGY_W10 = 140;
+
+  /*
+   * Heltec ESP32S3 + SX1262
+   */
+  HELTEC_RC32 = 141;
+
+  /*
+   * Heltec NRF52840 + SX1262
+   */
+  HELTEC_RC52 = 142;
+
+  /*
+   * Heltec ESP32C6 + SX1262
+   */
+  HELTEC_RCC6 = 143;
+
+  /*
+   * Seeed Wio Tracker L1 Pro 1W, nRF52840 + SX1262 with 1 W external PA
+   */
+  SEEED_WIO_TRACKER_L1_PRO_1W = 144;
+
+  /*
+   * Meshnology W12
+   */
+  MESHNOLOGY_W12 = 145;
+
+  /*
+   * Seeed Studio MeshPager X2
+   */
+  MESHPAGER_X2 = 146;
 
   /*
    * ------------------------------------------------------------------------------------------------------------------------------------------
