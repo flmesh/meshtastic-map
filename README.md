@@ -50,7 +50,7 @@ Liam's version of the map is available at https://meshtastic.liamcottle.net
   - Meshtastic firmware older than [v2.3.2](https://github.com/meshtastic/firmware/releases/tag/v2.3.2.63df972) reports MQTT nodes as Neighbours.
   - This was fixed in [meshtastic/firmware/#3457](https://github.com/meshtastic/firmware/pull/3457), but adoption will likely be slow...
   - A node's neighbour claims are ignored once it hasn't sent a fresh `NEIGHBORINFO_APP` within your configured "hide nodes inactive for" window (Settings), to cut down on stale/misleading lines.
-  - Connection lines (and their traceroute counterparts) are colour-coded by SNR: green at 0dB or above, yellow/poor down to -7.5dB, red below that — LoRa can still copy signal well below the noise floor, so "poor" isn't "dead". Click a line to see the last few SNR readings recorded for that link.
+  - Connection lines (and their traceroute counterparts) are colour-coded by SNR: green at 0dB or above, yellow/poor down to -7.5dB, red below that. Click a line to see the last few SNR readings recorded for that link.
 - [x] "Infrastructure Sites" node layer. Filters the map down to router-family nodes (`ROUTER`, `ROUTER_LATE`, `REPEATER`, `ROUTER_CLIENT`) to help spot the backbone of the mesh.
   - A dedicated "Infra Connections" overlay draws neighbour lines only where both ends are infrastructure sites, separately from the general "Neighbours" layer.
 - [x] Weather radar overlays. Toggle a global precipitation composite ([RainViewer](https://www.rainviewer.com/)) or a higher-resolution US-only radar ([NEXRAD](https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/) via the Iowa Environmental Mesonet) on the map.
