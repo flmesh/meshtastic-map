@@ -6,7 +6,7 @@
     <title>Florida Mesh Map</title>
     <meta name="title" content="Florida Mesh Map">
     <meta name="description" content="An interactive map of all Meshtastic nodes.">
-    <link rel="icon" type="image/png" href="/icon.png"/>
+    <link rel="icon" type="image/webp" href="/icon.webp"/>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -186,7 +186,7 @@
 
                 <!-- icon -->
                 <div v-if="!isShowingMobileSearch" class="hidden sm:block my-auto mr-3">
-                    <a href="https://areyoumeshingwith.us"><img class="w-10 h-10 rounded" src="icon.png" />
+                    <a href="https://areyoumeshingwith.us"><img class="w-10 h-10 rounded" src="icon.webp" />
 </div>
 
                 <!-- app info -->
@@ -359,7 +359,7 @@
                                 <!-- app info -->
                                 <div class="w-full mx-auto text-center">
                                     <a href="https://areyoumeshingwith.us/">
-                                        <img src="./icon.png" class="mx-auto w-16 h-16 rounded mb-1" />
+                                        <img src="./icon.webp" class="mx-auto w-16 h-16 rounded mb-1" />
                                         <h1 class="font-bold">Florida Mesh Map</h1>
                                         <h2>Orginal Creation by <a class="link" target="_blank" href="https://liamcottle.com">Liam Cottle</a></h2>
 										<h3>Maintained & Operated by <a class="link" target="_blank" href="https://github.com/flmesh" >FL-Mesh</a></h3>
@@ -574,7 +574,7 @@
                                         <div class="absolute inset-0 group-hover:bg-gray-100" aria-hidden="true"></div>
                                         <div class="relative flex min-w-0 flex-1 items-center">
                                             <span class="relative inline-block flex-shrink-0 mr-4">
-                                                <img class="h-20 w-20 rounded object-contain" :src="`/images/devices/${hardwareModel.hardware_model_name}.png`" alt="" onerror="if(this.src != '/images/no_image.png') this.src = '/images/no_image.png';">
+                                                <img class="h-20 w-20 rounded object-contain" :src="`/images/devices/${hardwareModel.hardware_model_name}.webp`" alt="" onerror="if(this.src != '/images/no_image.webp') this.src = '/images/no_image.webp';">
                                             </span>
                                             <div class="truncate">
                                                 <p class="truncate text-sm font-medium text-gray-900">{{ hardwareModel.hardware_model_name }}</p>
@@ -666,7 +666,7 @@
 
                             <div class="flex flex-col my-2">
                                 <div class="mx-auto">
-                                    <img class="h-48 w-48 rounded object-contain" :src="`/images/devices/${selectedNode.hardware_model_name}.png`" alt="" onerror="if(this.src != '/images/no_image.png') this.src = '/images/no_image.png';">
+                                    <img class="h-48 w-48 rounded object-contain" :src="`/images/devices/${selectedNode.hardware_model_name}.webp`" alt="" onerror="if(this.src != '/images/no_image.webp') this.src = '/images/no_image.webp';">
                                 </div>
                             </div>
 
@@ -4147,7 +4147,7 @@
 
         var loraFrequencyRange = getRegionFrequencyRange(node.region_name);
 
-        var tooltip = `<img class="mb-4 w-40 mx-auto" src="/images/devices/${node.hardware_model_name}.png" onerror="this.classList.add('hidden')"/>` +
+        var tooltip = `<img class="mb-4 w-40 mx-auto" src="/images/devices/${node.hardware_model_name}.webp" onerror="this.classList.add('hidden')"/>` +
             `<b>${escapeString(node.long_name)}</b>` +
             `<br/>Short Name: ${escapeString(node.short_name)}` +
             `<br/>MQTT: ${mqttStatus}` +
