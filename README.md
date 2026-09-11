@@ -27,6 +27,7 @@ Liam's version of the map is available at https://meshtastic.liamcottle.net
 - `NEIGHBORINFO_APP` packets log neighbours heard by a node to the database.
 - `TELEMETRY_APP` packets update battery and voltage metrics for a node in the database.
 - `TRACEROUTE_APP` packets log all trace routes performed by a node to the database.
+- `NEIGHBORINFO_APP` and `TRACEROUTE_APP` packets also record directional SNR "edges" between node pairs, which power the recent-readings history shown in connection popups.
 - `MAP_REPORT_APP` packets are stored in the database, but are not widely adopted, so are not used yet.
 - The database is a MySQL server, and a nodejs express server is running an API to serve data to the map interface.
 
@@ -43,11 +44,16 @@ Liam's version of the map is available at https://meshtastic.liamcottle.net
 - [x] Settings available to hide nodes from the map if they haven't been updated in a while.
 - [x] Real-Time message UI to view `TEXT_MESSAGE_APP` packets as they come in.
 - [x] View position history of a node between a selectable time range.
-- [x] "Neighbours" map layer. Shows blue connection lines between nodes that heard the other node.
+- [x] "Neighbours" map layer. Shows connection lines between nodes that heard the other node.
   - This information is taken from the `NEIGHBORINFO_APP`.
   - Some neighbour lines are clearly wrong.
   - Meshtastic firmware older than [v2.3.2](https://github.com/meshtastic/firmware/releases/tag/v2.3.2.63df972) reports MQTT nodes as Neighbours.
   - This was fixed in [meshtastic/firmware/#3457](https://github.com/meshtastic/firmware/pull/3457), but adoption will likely be slow...
+  - A node's neighbour claims are ignored once it hasn't sent a fresh `NEIGHBORINFO_APP` within your configured "hide nodes inactive for" window (Settings), to cut down on stale/misleading lines.
+  - Connection lines (and their traceroute counterparts) are colour-coded by SNR: green at 0dB or above, yellow/poor down to -7.5dB, red below that — LoRa can still copy signal well below the noise floor, so "poor" isn't "dead". Click a line to see the last few SNR readings recorded for that link.
+- [x] "Infrastructure Sites" node layer. Filters the map down to router-family nodes (`ROUTER`, `ROUTER_LATE`, `REPEATER`, `ROUTER_CLIENT`) to help spot the backbone of the mesh.
+  - A dedicated "Infra Connections" overlay draws neighbour lines only where both ends are infrastructure sites, separately from the general "Neighbours" layer.
+- [x] Weather radar overlays. Toggle a global precipitation composite ([RainViewer](https://www.rainviewer.com/)) or a higher-resolution US-only radar ([NEXRAD](https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/) via the Iowa Environmental Mesonet) on the map.
 
 ## TODO
 
@@ -264,7 +270,7 @@ npm run test
 
 ## Contributing
 
-If you have a feature request, or find a bug, please [open an issue](https://github.com/liamcottle/meshtastic-map/issues) here on GitHub.
+If you have a feature request, or find a bug, please [open an issue](https://github.com/flmesh/meshtastic-map/issues) here on GitHub.
 
 ## License
 
