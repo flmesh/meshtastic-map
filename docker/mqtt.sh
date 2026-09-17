@@ -3,12 +3,24 @@
 # the meshtastic protobuf schema files are GPLv3 licensed and can not be bundled in this MIT licensed
 # project (see the "MQTT Collector" section of the README), so fetch them fresh into the same
 # src/external/protobufs path mqtt.js looks for by default, if they aren't already present.
-# Pinned to a specific release tag (https://github.com/meshtastic/protobufs/releases) rather than
-# the live default branch, so the ingested schema doesn't silently drift whenever upstream pushes
-# new commits - bump this when there's a reason to pick up a newer schema.
-MESHTASTIC_PROTOBUFS_VERSION="v2.8.0"
+# Fetches a release (https://github.com/meshtastic/protobufs/releases) rather than the live
+# default branch, so the ingested schema only ever changes at a known, tagged point rather than
+# between arbitrary unreleased commits. Defaults to whatever is newest at the time this file
+# doesn't already exist (e.g. first start, or after a volume wipe) - set
+# MESHTASTIC_PROTOBUFS_VERSION (e.g. "v2.7.26") to pin to a specific release instead.
+MESHTASTIC_PROTOBUFS_VERSION="${MESHTASTIC_PROTOBUFS_VERSION:-latest}"
 
 if [ ! -f "src/external/protobufs/meshtastic/mqtt.proto" ]; then
+
+    if [ "$MESHTASTIC_PROTOBUFS_VERSION" = "latest" ]; then
+        echo "Resolving latest Meshtastic protobufs release"
+        wget -qO /tmp/meshtastic-protobufs-release.json https://api.github.com/repos/meshtastic/protobufs/releases/latest
+        MESHTASTIC_PROTOBUFS_VERSION=$(node -p "require('/tmp/meshtastic-protobufs-release.json').tag_name" 2>/dev/null)
+        rm -f /tmp/meshtastic-protobufs-release.json
+        # fall back to a known-good pin if GitHub's API was unreachable or rate-limited
+        MESHTASTIC_PROTOBUFS_VERSION="${MESHTASTIC_PROTOBUFS_VERSION:-v2.8.0}"
+    fi
+
     echo "Fetching Meshtastic protobufs ${MESHTASTIC_PROTOBUFS_VERSION}"
     mkdir -p src/external/protobufs
     wget -q -O /tmp/meshtastic-protobufs.tar.gz \

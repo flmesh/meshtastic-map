@@ -233,6 +233,7 @@ The stack is configured entirely with environment variables (e.g. in a `.env` fi
 | `DB_PORT`  | Host port MariaDB is published on (container always listens on `3306`)                 | `3306`                                                    |
 | `MQTT_OPTS` | Full CLI flag string passed to [`src/mqtt.js`](./src/mqtt.js) — your broker, credentials, topic, decryption keys, collect flags, etc. See [MQTT Collector](#mqtt-collector) above for the full list of options. | *(empty — connects to the public `mqtt.meshtastic.org`)* |
 | `MAP_OPTS`  | Full CLI flag string passed to [`src/index.js`](./src/index.js), e.g. `--port 8123`.   | *(empty)*                                                 |
+| `MESHTASTIC_PROTOBUFS_VERSION` | Pins the [Meshtastic protobufs release](https://github.com/meshtastic/protobufs/releases) fetched by [`docker/mqtt.sh`](./docker/mqtt.sh) to a specific tag (e.g. `v2.7.26`), instead of always resolving whatever is newest. Only takes effect the first time the `meshtastic-mqtt` container starts against a given volume — it won't re-fetch once `src/external/protobufs` already exists. | `latest` |
 
 For example, to remap ports and connect to your own MQTT server:
 
