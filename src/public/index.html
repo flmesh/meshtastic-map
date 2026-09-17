@@ -252,14 +252,39 @@
             color: #7a837d;
         }
 
-        /* leaflet's own controls/popups ship hardcoded white styling */
+        /* leaflet's own controls/popups/tooltips ship hardcoded white styling. Tooltips (hover)
+           and popups (click) are two separate leaflet features with their own classes, both
+           used for node marker bubbles as well as connection line bubbles. */
         html.dark .leaflet-popup-content-wrapper,
         html.dark .leaflet-popup-tip,
+        html.dark .leaflet-tooltip,
         html.dark .leaflet-bar a,
         html.dark .leaflet-control-layers,
         html.dark .leaflet-control-layers-expanded {
             background-color: #353937 !important;
             color: #e8eae7 !important;
+        }
+
+        html.dark .leaflet-tooltip {
+            border-color: #353937 !important;
+        }
+
+        /* the little arrow pointing from a tooltip to its marker is drawn as a border-color
+           trick, so it needs to match the new background on whichever side is visible */
+        html.dark .leaflet-tooltip-top:before {
+            border-top-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-bottom:before {
+            border-bottom-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-left:before {
+            border-left-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-right:before {
+            border-right-color: #353937 !important;
         }
 
         html.dark .leaflet-bar a:hover {
@@ -277,6 +302,15 @@
 
         html.dark .leaflet-control-attribution a {
             color: #7dd3fc !important; /* sky-300 */
+        }
+
+        /* the About page's mint-green welcome banner becomes forest green */
+        html.dark .bg-green-100 {
+            background-color: #14532d !important; /* green-900 */
+        }
+
+        html.dark .border-green-200 {
+            border-color: #166534 !important; /* green-800 - matches the Infra Connections line color */
         }
 
     </style>
