@@ -131,10 +131,12 @@ You will now need to restart the `index.js` and `mqtt.js` scripts.
 > Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project.
 You will need to obtain these files yourself to be able to use the MQTT Collector.
 >
-> If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) clones them fresh into `src/external/protobufs` on container start if they aren't already present. If you're running `src/mqtt.js` directly (not via Docker), clone them yourself into the same path;
+> If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) clones them fresh into `src/external/protobufs` on container start if they aren't already present. If you're running `src/mqtt.js` directly (not via Docker), clone them yourself into the same path, then fetch `google/protobuf/descriptor.proto` separately — meshtastic's own `nanopb.proto` imports it, but it's not part of the meshtastic/protobufs repo, nor bundled by protobufjs;
 >
 > ```
 > git clone https://github.com/meshtastic/protobufs src/external/protobufs
+> mkdir -p src/external/protobufs/google/protobuf
+> curl -o src/external/protobufs/google/protobuf/descriptor.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/descriptor.proto
 > ```
 >
 > If you clone and install the Meshtastic protobufs, your use of those files will be subject to the GPLv3 license. This does not change the license of this project being MIT — only the parts you add from the Meshtastic project are covered under GPLv3.
