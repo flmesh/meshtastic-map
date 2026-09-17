@@ -131,10 +131,11 @@ You will now need to restart the `index.js` and `mqtt.js` scripts.
 > Please note, due to the Meshtastic protobuf schema files being locked under a GPLv3 license, these are not provided in this MIT licensed project.
 You will need to obtain these files yourself to be able to use the MQTT Collector.
 >
-> If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) clones them fresh into `src/external/protobufs` on container start if they aren't already present. If you're running `src/mqtt.js` directly (not via Docker), clone them yourself into the same path, then fetch `google/protobuf/descriptor.proto` separately — meshtastic's own `nanopb.proto` imports it, but it's not part of the meshtastic/protobufs repo, nor bundled by protobufjs;
+> If you're running via [Docker Compose](#docker-compose), this is handled for you automatically — [docker/mqtt.sh](./docker/mqtt.sh) fetches them fresh into `src/external/protobufs` on container start if they aren't already present, pinned to a specific [release](https://github.com/meshtastic/protobufs/releases) rather than the live default branch so the ingested schema doesn't silently drift. If you're running `src/mqtt.js` directly (not via Docker), fetch the same release yourself into the same path, then fetch `google/protobuf/descriptor.proto` separately — meshtastic's own `nanopb.proto` imports it, but it's not part of any meshtastic/protobufs release, nor bundled by protobufjs;
 >
 > ```
-> git clone https://github.com/meshtastic/protobufs src/external/protobufs
+> mkdir -p src/external/protobufs
+> curl -L https://github.com/meshtastic/protobufs/archive/refs/tags/v2.8.0.tar.gz | tar -xz -C src/external/protobufs --strip-components=1
 > mkdir -p src/external/protobufs/google/protobuf
 > curl -o src/external/protobufs/google/protobuf/descriptor.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/main/src/google/protobuf/descriptor.proto
 > ```

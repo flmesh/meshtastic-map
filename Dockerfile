@@ -10,7 +10,7 @@ RUN npm ci
 # Copy the rest of your source
 COPY . .
 
-RUN apk add --no-cache openssl git
+RUN apk add --no-cache openssl
 
 
 EXPOSE 8080
