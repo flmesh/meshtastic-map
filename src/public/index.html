@@ -6,7 +6,19 @@
     <title>Florida Mesh Map</title>
     <meta name="title" content="Florida Mesh Map">
     <meta name="description" content="An interactive map of all Meshtastic nodes.">
-    <link rel="icon" type="image/png" href="/icon.png"/>
+    <link rel="icon" type="image/webp" href="/icon.webp"/>
+
+    <!-- apply dark mode before first paint, so there's no flash of the light theme -->
+    <script>
+        (function() {
+            // "system" (the default when nothing's been explicitly chosen yet) follows the OS setting
+            var preference = localStorage.getItem("config_dark_mode") || "system";
+            var isDark = preference === "dark" || (preference === "system" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            if(isDark){
+                document.documentElement.classList.add("dark");
+            }
+        })();
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -16,6 +28,12 @@
 
     <!-- tailwind css -->
     <script src="assets/js/tailwindcss/tailwind-v3.4.3-forms-v0.5.7.js"></script>
+    <script>
+        // use the "class" strategy so dark mode is a manual toggle instead of following the OS setting directly
+        tailwind.config = {
+            darkMode: 'class',
+        };
+    </script>
 
     <!-- leaflet map -->
     <link rel="stylesheet" href="assets/js/leaflet@1.9.3/dist/leaflet.css" />
@@ -136,6 +154,165 @@
             z-index: 1002;
         }
 
+        /*
+         * Dark mode palette, derived from a single base tone (#262927) rather than a
+         * ready-made color scale, so every shade below is that same hue lightened by a
+         * consistent step for each elevation/text tier.
+         *
+         * The page is built almost entirely out of Tailwind's white/gray utility classes
+         * rather than a small set of themeable components, so rather than hand-adding a
+         * `dark:` variant to every one of those class instances across the page, these rules
+         * remap the handful of gray/white utility classes actually in use directly. `!important`
+         * is needed throughout since Tailwind's own generated stylesheet is injected into <head>
+         * after this block, so it would otherwise win the cascade.
+         */
+        html.dark body.bg-gray-200 {
+            background-color: #262927 !important; /* base */
+            color: #e8eae7 !important; /* default text color for anything with no explicit text-gray-* class, e.g. "Florida Mesh Map" in the header */
+        }
+
+        html.dark .bg-white {
+            background-color: #353937 !important; /* base, one step up - panels/modals */
+        }
+
+        html.dark .bg-gray-50 {
+            background-color: #262927 !important; /* base - recessed inputs, matches the page background */
+        }
+
+        html.dark .hover\:bg-gray-50:hover {
+            background-color: #353937 !important;
+        }
+
+        html.dark .bg-gray-100,
+        html.dark .hover\:bg-gray-100:hover {
+            background-color: #484e4a !important; /* base, two steps up - buttons */
+        }
+
+        html.dark .bg-gray-200,
+        html.dark .hover\:bg-gray-200:hover {
+            background-color: #5f6762 !important; /* base, three steps up - button hover */
+        }
+
+        html.dark .hover\:bg-gray-300:hover {
+            background-color: #7a837d !important; /* base, four steps up */
+        }
+
+        /* the round header icon buttons and <button> elements get their own solid color,
+           distinct from the plain bg-gray-100 boxes used elsewhere for code/stat panels */
+        html.dark .rounded-full.bg-gray-100,
+        html.dark button.bg-gray-100 {
+            background-color: #636c71 !important;
+        }
+
+        /* a crisp, solid-fill halo around the app logo. A tiny 1px blur just softens/antialiases
+           the ring's edge without turning it into a soft glow. */
+        html.dark .app-logo {
+            box-shadow: 0 0 1px 1px #e8eae7 !important;
+        }
+
+        html.dark .text-gray-900 {
+            color: #e8eae7 !important;
+        }
+
+        html.dark .text-gray-700 {
+            color: #c3c7c2 !important;
+        }
+
+        html.dark .text-gray-600,
+        html.dark .text-gray-500 {
+            color: #8f948f !important;
+        }
+
+        html.dark .border-gray-300,
+        html.dark .ring-gray-300 {
+            border-color: #5f6762 !important;
+        }
+
+        html.dark .ring-gray-500 {
+            border-color: #7a837d !important;
+        }
+
+        html.dark .border-gray-200,
+        html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #484e4a !important;
+        }
+
+        html.dark .shadow,
+        html.dark .shadow-sm,
+        html.dark .shadow-md,
+        html.dark .shadow-lg {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        html.dark .link {
+            color: #60a5fa; /* blue-400 - better contrast than blue-600 on a dark background */
+        }
+
+        html.dark input::placeholder {
+            color: #7a837d;
+        }
+
+        /* leaflet's own controls/popups/tooltips ship hardcoded white styling. Tooltips (hover)
+           and popups (click) are two separate leaflet features with their own classes, both
+           used for node marker bubbles as well as connection line bubbles. */
+        html.dark .leaflet-popup-content-wrapper,
+        html.dark .leaflet-popup-tip,
+        html.dark .leaflet-tooltip,
+        html.dark .leaflet-bar a,
+        html.dark .leaflet-control-layers,
+        html.dark .leaflet-control-layers-expanded {
+            background-color: #353937 !important;
+            color: #e8eae7 !important;
+        }
+
+        html.dark .leaflet-tooltip {
+            border-color: #353937 !important;
+        }
+
+        /* the little arrow pointing from a tooltip to its marker is drawn as a border-color
+           trick, so it needs to match the new background on whichever side is visible */
+        html.dark .leaflet-tooltip-top:before {
+            border-top-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-bottom:before {
+            border-bottom-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-left:before {
+            border-left-color: #353937 !important;
+        }
+
+        html.dark .leaflet-tooltip-right:before {
+            border-right-color: #353937 !important;
+        }
+
+        html.dark .leaflet-bar a:hover {
+            background-color: #484e4a !important;
+        }
+
+        html.dark .leaflet-control-layers-separator {
+            border-top-color: #5f6762 !important;
+        }
+
+        html.dark .leaflet-control-attribution {
+            background-color: rgba(38, 41, 39, 0.8) !important; /* base, with transparency */
+            color: #8f948f !important;
+        }
+
+        html.dark .leaflet-control-attribution a {
+            color: #7dd3fc !important; /* sky-300 */
+        }
+
+        /* the About page's mint-green welcome banner becomes forest green */
+        html.dark .bg-green-100 {
+            background-color: #14532d !important; /* green-900 */
+        }
+
+        html.dark .border-green-200 {
+            border-color: #166534 !important; /* green-800 - matches the Infra Connections line color */
+        }
+
     </style>
 
 </head>
@@ -186,7 +363,7 @@
 
                 <!-- icon -->
                 <div v-if="!isShowingMobileSearch" class="hidden sm:block my-auto mr-3">
-                    <a href="https://areyoumeshingwith.us"><img class="w-10 h-10 rounded" src="icon.png" />
+                    <a href="https://areyoumeshingwith.us"><img class="w-10 h-10 rounded-full app-logo" src="icon.webp" />
 </div>
 
                 <!-- app info -->
@@ -240,6 +417,26 @@
                         </div>
                         <div class="hidden sm:block">
                             <span class="tooltip-text">About</span>
+                        </div>
+                    </a>
+                    <a @click="cycleThemePreference" href="javascript:void(0)" class="tooltip rounded-full">
+                        <div class="bg-gray-100 hover:bg-gray-200 p-2 rounded-full">
+                            <!-- sun -->
+                            <svg v-if="themePreference === 'light'" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                            </svg>
+                            <!-- moon -->
+                            <svg v-else-if="themePreference === 'dark'" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                            </svg>
+                            <!-- system: monitor -->
+                            <svg v-else class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <rect x="3" y="4.5" width="18" height="12" rx="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 20.25h7.5M12 16.5v3.75" />
+                            </svg>
+                        </div>
+                        <div class="hidden sm:block">
+                            <span class="tooltip-text">{{ themePreference === 'light' ? 'Light' : themePreference === 'dark' ? 'Dark' : 'System' }}</span>
                         </div>
                     </a>
                     <a @click="isShowingMobileSearch = true" href="javascript:void(0)" class="tooltip rounded-full block lg:hidden">
@@ -359,7 +556,7 @@
                                 <!-- app info -->
                                 <div class="w-full mx-auto text-center">
                                     <a href="https://areyoumeshingwith.us/">
-                                        <img src="./icon.png" class="mx-auto w-16 h-16 rounded mb-1" />
+                                        <img src="./icon.webp" class="mx-auto w-16 h-16 rounded-full mb-1 app-logo" />
                                         <h1 class="font-bold">Florida Mesh Map</h1>
                                         <h2>Orginal Creation by <a class="link" target="_blank" href="https://liamcottle.com">Liam Cottle</a></h2>
 										<h3>Maintained & Operated by <a class="link" target="_blank" href="https://github.com/flmesh" >FL-Mesh</a></h3>
@@ -495,6 +692,8 @@
                                         <div>The Meshtastic logo is the trademark of Meshtastic LLC.</div>
                                         <div>Street Map tiles provided by <a class="link" target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></div>
 										<div>Aerial Map tiles provided by <a class="link" target="_blank" href="https://developers.arcgis.com/documentation/esri-and-data-attribution/">Esri</a></div>
+                                        <div>Global weather radar provided by <a class="link" target="_blank" href="https://www.rainviewer.com/">RainViewer</a></div>
+                                        <div>US weather radar provided by the <a class="link" target="_blank" href="https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/">Iowa Environmental Mesonet</a>, using NEXRAD Level III base reflectivity data courtesy of NOAA/NWS RIDGE</div>
                                     </div>
                                 </div>
 
@@ -572,7 +771,7 @@
                                         <div class="absolute inset-0 group-hover:bg-gray-100" aria-hidden="true"></div>
                                         <div class="relative flex min-w-0 flex-1 items-center">
                                             <span class="relative inline-block flex-shrink-0 mr-4">
-                                                <img class="h-20 w-20 rounded object-contain" :src="`/images/devices/${hardwareModel.hardware_model_name}.png`" alt="" onerror="if(this.src != '/images/no_image.png') this.src = '/images/no_image.png';">
+                                                <img class="h-20 w-20 rounded object-contain" :src="`/images/devices/${hardwareModel.hardware_model_name}.webp`" alt="" onerror="if(this.src != '/images/no_image.webp') this.src = '/images/no_image.webp';">
                                             </span>
                                             <div class="truncate">
                                                 <p class="truncate text-sm font-medium text-gray-900">{{ hardwareModel.hardware_model_name }}</p>
@@ -664,7 +863,7 @@
 
                             <div class="flex flex-col my-2">
                                 <div class="mx-auto">
-                                    <img class="h-48 w-48 rounded object-contain" :src="`/images/devices/${selectedNode.hardware_model_name}.png`" alt="" onerror="if(this.src != '/images/no_image.png') this.src = '/images/no_image.png';">
+                                    <img class="h-48 w-48 rounded object-contain" :src="`/images/devices/${selectedNode.hardware_model_name}.webp`" alt="" onerror="if(this.src != '/images/no_image.webp') this.src = '/images/no_image.webp';">
                                 </div>
                             </div>
 
@@ -1814,6 +2013,38 @@
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
+    function getConfigThemePreference() {
+        // "system" is the default until the user explicitly picks light or dark
+        const value = localStorage.getItem("config_dark_mode");
+        return (value === "dark" || value === "light") ? value : "system";
+    }
+
+    function isDarkModeActiveForPreference(preference) {
+        if(preference === "dark"){
+            return true;
+        } else if(preference === "light"){
+            return false;
+        }
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function applyThemePreference(preference) {
+        const isDark = isDarkModeActiveForPreference(preference);
+        document.documentElement.classList.toggle("dark", isDark);
+        // Chart.js reads its defaults at chart-creation time, and every telemetry chart is
+        // destroyed and recreated whenever it's (re)loaded, so updating these here is enough
+        // to retheme charts next time they're opened, without needing a page reload
+        if(window.Chart){
+            window.Chart.defaults.color = isDark ? "#c3c7c2" : "#666";
+            window.Chart.defaults.borderColor = isDark ? "#484e4a" : "rgba(0,0,0,0.1)";
+        }
+    }
+
+    function setConfigThemePreference(preference) {
+        localStorage.setItem("config_dark_mode", preference);
+        window.applyThemePreference(preference);
+    }
+
 </script>
 
 <script>
@@ -1822,6 +2053,8 @@
             return {
 
                 isShowingAnnouncement: this.shouldShowAnnouncement(),
+
+                themePreference: window.getConfigThemePreference(),
 
                 configNodesMaxAgeInSeconds: window.getConfigNodesMaxAgeInSeconds(),
                 configNodesDisconnectedAgeInSeconds: window.getConfigNodesDisconnectedAgeInSeconds(),
@@ -1873,6 +2106,21 @@
         },
         mounted: function() {
 
+            // make sure the first chart drawn already matches the current theme, since
+            // Chart.js only picks up window.Chart.defaults changes the next time a chart is
+            // created, not retroactively
+            window.applyThemePreference(this.themePreference);
+
+            // while set to "system", keep following the OS theme live if it changes without a
+            // page reload (e.g. the OS switching to dark mode at sunset while the tab stays open)
+            if(window.matchMedia){
+                window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+                    if(this.themePreference === "system"){
+                        window.applyThemePreference("system");
+                    }
+                });
+            }
+
             // load data
             this.loadHardwareModelStats();
 
@@ -1923,6 +2171,12 @@
             dismissAnnouncement: function() {
                 window.localStorage.setItem("last-seen-announcement-id", this.getAnnouncementId());
                 this.isShowingAnnouncement = false;
+            },
+            cycleThemePreference: function() {
+                const order = ["system", "light", "dark"];
+                const next = order[(order.indexOf(this.themePreference) + 1) % order.length];
+                this.themePreference = next;
+                window.setConfigThemePreference(next);
             },
             shouldShowInfoModal: function() {
                 return !window.getConfigHasSeenInfoModal()
@@ -2748,13 +3002,15 @@
         [100, 500], // bottom right
     ];
 
-    // create map positioned over AU and NZ
+    // create map positioned over Florida
+    // (longitude is +360 to match the wrap applied to node marker longitudes below,
+    // keeping it within the shifted [70, 500] maxBounds range)
     var map = L.map('map', {
         maxBounds: bounds,
     }).setView([
-        -15,
-        150,
-    ], 2);
+        27.8,
+        -81.7 + 360,
+    ], 6);
 
     // remove leaflet link
     map.attributionControl.setPrefix('');
@@ -2825,17 +3081,83 @@
     // create layer groups
     var nodesLayerGroup = new L.LayerGroup();
     var neighboursLayerGroup = new L.LayerGroup();
+    var infraConnectionsLayerGroup = new L.LayerGroup();
     var nodeNeighboursLayerGroup = new L.LayerGroup();
     var nodesClusteredLayerGroup = L.markerClusterGroup({
         showCoverageOnHover: false,
         disableClusteringAtZoom: 10, // zoom level where node clustering is disabled
     });
-    var nodesRouterLayerGroup = L.markerClusterGroup({
+    var nodesInfraLayerGroup = L.markerClusterGroup({
         showCoverageOnHover: false,
         disableClusteringAtZoom: 10, // zoom level where node clustering is disabled
     });
     var waypointsLayerGroup = new L.LayerGroup();
     var nodePositionHistoryLayerGroup = new L.LayerGroup();
+    var weatherRadarLayerGroup = new L.LayerGroup();
+    var weatherRadarUsLayerGroup = new L.LayerGroup();
+
+    // weather radar - global (RainViewer) - shows the latest precipitation radar composite as a map overlay
+    // https://www.rainviewer.com/api/weather-maps-api.html - free, no api key required
+    // covers the whole world, but rainviewer's own docs cap meaningful detail at zoom 7
+    var weatherRadarTileLayer = null;
+    function refreshWeatherRadarLayer() {
+        window.axios.get('https://api.rainviewer.com/public/weather-maps.json').then((response) => {
+            const data = response.data;
+            const frames = (data.radar && data.radar.past) || [];
+            const latestFrame = frames[frames.length - 1];
+            if(!latestFrame){
+                return;
+            }
+            // 512px tiles render sharper than the 256px default since rainviewer samples more
+            // pixels per tile from the same underlying radar mosaic
+            const tileUrl = `${data.host}${latestFrame.path}/512/{z}/{x}/{y}/2/1_1.png`;
+            if(weatherRadarTileLayer){
+                weatherRadarLayerGroup.removeLayer(weatherRadarTileLayer);
+            }
+            weatherRadarTileLayer = L.tileLayer(tileUrl, {
+                opacity: 0.6,
+                zIndex: 500,
+                // rainviewer's documented max zoom is 7 - stop requesting new tiles there and let
+                // leaflet smoothly upscale the last real tile via css instead of rainviewer sending
+                // back its own blurrier upscaled tiles
+                maxNativeZoom: 7,
+                maxZoom: 22,
+                attribution: 'Weather radar &copy; <a href="https://www.rainviewer.com/" target="_blank">RainViewer</a>',
+            });
+            weatherRadarLayerGroup.addLayer(weatherRadarTileLayer);
+        }).catch((error) => {
+            console.error('failed to refresh weather radar layer', error);
+        });
+    }
+
+    // load the initial radar frame, then keep it fresh (rainviewer publishes a new composite roughly every 10 minutes)
+    refreshWeatherRadarLayer();
+    setInterval(refreshWeatherRadarLayer, 10 * 60 * 1000);
+
+    // weather radar - US only (Iowa Environmental Mesonet NEXRAD mosaic) - much higher native resolution
+    // than rainviewer's global composite (built from NWS Level III ~1km reflectivity data), but only has
+    // coverage over the continental US. https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/
+    var weatherRadarUsTileLayer = null;
+    function refreshWeatherRadarUsLayer() {
+        // "900913" is iem's fixed layer name for the always-current, web-mercator-ready mosaic tiles -
+        // cache-bust with a timestamp query param since the underlying data refreshes every 5 minutes
+        // but the tile url itself never changes
+        const tileUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?_=${Date.now()}`;
+        if(weatherRadarUsTileLayer){
+            weatherRadarUsLayerGroup.removeLayer(weatherRadarUsTileLayer);
+        }
+        weatherRadarUsTileLayer = L.tileLayer(tileUrl, {
+            opacity: 0.6,
+            zIndex: 500,
+            maxZoom: 22,
+            attribution: 'Weather radar &copy; <a href="https://mesonet.agron.iastate.edu/docs/nexrad_mosaic/" target="_blank">Iowa Environmental Mesonet</a>, NWS RIDGE',
+        });
+        weatherRadarUsLayerGroup.addLayer(weatherRadarUsTileLayer);
+    }
+
+    // load the initial radar frame, then keep it fresh (iem's mosaic updates every 5 minutes)
+    refreshWeatherRadarUsLayer();
+    setInterval(refreshWeatherRadarUsLayer, 5 * 60 * 1000);
 
     // create icons
     var iconMqttConnected = L.divIcon({
@@ -2892,15 +3214,18 @@
     L.control.groupedLayers(tileLayers, {
         "Nodes": {
             "All": nodesLayerGroup,
-            "Routers": nodesRouterLayerGroup,
+            "Infrastructure Sites": nodesInfraLayerGroup,
             "Clustered": nodesClusteredLayerGroup,
             "None": new L.LayerGroup(),
         },
         "Overlays": {
             "Legend": legendLayerGroup,
             "Neighbours": neighboursLayerGroup,
+            "Infra Connections": infraConnectionsLayerGroup,
             "Waypoints": waypointsLayerGroup,
             "Position History": nodePositionHistoryLayerGroup,
+            "RainViewer Radar": weatherRadarLayerGroup,
+            "US NEXRAD Radar": weatherRadarUsLayerGroup,
         },
     }, {
         // make the "Nodes" group exclusive (use radio inputs instead of checkbox)
@@ -2918,11 +3243,20 @@
     if(enabledOverlayLayers.includes("Neighbours")){
         neighboursLayerGroup.addTo(map);
     }
+    if(enabledOverlayLayers.includes("Infra Connections")){
+        infraConnectionsLayerGroup.addTo(map);
+    }
     if(enabledOverlayLayers.includes("Waypoints")){
         waypointsLayerGroup.addTo(map);
     }
     if(enabledOverlayLayers.includes("Position History")){
         nodePositionHistoryLayerGroup.addTo(map);
+    }
+    if(enabledOverlayLayers.includes("RainViewer Radar")){
+        weatherRadarLayerGroup.addTo(map);
+    }
+    if(enabledOverlayLayers.includes("US NEXRAD Radar")){
+        weatherRadarUsLayerGroup.addTo(map);
     }
 
     // update config when map overlay is added
@@ -3062,11 +3396,12 @@
     function clearAllNodes() {
         nodesLayerGroup.clearLayers();
         nodesClusteredLayerGroup.clearLayers();
-        nodesRouterLayerGroup.clearLayers();
+        nodesInfraLayerGroup.clearLayers();
     }
 
     function clearAllNeighbours() {
         neighboursLayerGroup.clearLayers();
+        infraConnectionsLayerGroup.clearLayers();
     }
 
     function clearAllWaypoints() {
@@ -3140,8 +3475,60 @@
     }
 
     function getColourForSnr(snr) {
-        if(snr >= 0) return "#16a34a"; // good
-        if(snr < 0) return "#dc2626"; // bad
+        if(snr >= 0) return "#16a34a"; // great
+        if(snr >= -7.5) return "#ca8a04"; // poor - LoRa can still hear well below the noise floor
+        return "#dc2626"; // bad
+    }
+
+    // renders a "<nodeA> -> <nodeB>" direction's recent snr readings, each colour coded by quality
+    function renderSnrHistoryDirection(label, direction) {
+        if(!direction || direction.total_count === 0){
+            return `<div><b>${label}</b>: no recent readings</div>`;
+        }
+        const readings = direction.last_edges.slice(0, 3).map((edge) => {
+            const colour = getColourForSnr(edge.snr_db);
+            return `<span style="color:${colour}">${edge.snr_db.toFixed(1)}dB</span> (${moment(new Date(edge.created_at)).fromNow()})`;
+        }).join('<br/>&nbsp;&nbsp;');
+        return `<div><b>${label}</b>: avg ${direction.avg_snr_db.toFixed(1)}dB over ${direction.total_count} reading${direction.total_count === 1 ? '' : 's'}`
+            + `<br/>&nbsp;&nbsp;${readings}</div>`;
+    }
+
+    // fetches recent snr readings between two nodes and appends them to a line's popup the first
+    // time it's opened (not upfront, to keep line drawing itself synchronous/fast)
+    function enrichLinePopupWithSnrHistory(line, nodeId, otherNodeId, nodeLabel, otherNodeLabel, baseTooltipHtml) {
+        let loaded = false;
+        line.on('popupopen', function() {
+            if(loaded){
+                return;
+            }
+            loaded = true;
+            window.axios.get(`/api/v1/nodes/${nodeId}/edges/${otherNodeId}`).then((response) => {
+                const historyHtml = `<br/><br/><b>Recent Readings</b><br/>`
+                    + renderSnrHistoryDirection(`${nodeLabel} &rarr; ${otherNodeLabel}`, response.data.direction_a_to_b)
+                    + renderSnrHistoryDirection(`${otherNodeLabel} &rarr; ${nodeLabel}`, response.data.direction_b_to_a);
+                line.setPopupContent(baseTooltipHtml + historyHtml);
+            }).catch(() => {
+                // leave the popup showing just the base tooltip content on failure
+            });
+        });
+    }
+
+    // a node's "neighbours" is a single snapshot from its last NEIGHBORINFO_APP packet, overwritten
+    // in place whenever a fresh one arrives (see mqtt.js). if a node stops sending them (module
+    // disabled, reconfigured, etc) while still transmitting other packet types, its neighbours list
+    // is never cleared and just sits there indefinitely - so it must be checked for staleness
+    // separately from whether the node itself looks online. this uses its own fixed cutoff rather
+    // than the "Nodes Offline Age" setting: that setting is about when a node's icon turns red and
+    // defaults to off, so tying the two together meant stale neighbour lines were never filtered
+    // at all for anyone who hadn't gone and picked a value for an unrelated display preference.
+    const neighboursMaxAgeInSeconds = 604800; // 7 days
+
+    function areNodeNeighboursStale(node, now) {
+        if(!node.neighbours_updated_at){
+            return true; // no timestamp to trust
+        }
+        const neighboursAgeInMillis = now.diff(moment(node.neighbours_updated_at));
+        return neighboursAgeInMillis > neighboursMaxAgeInSeconds * 1000;
     }
 
     function cleanUpNodeNeighbours() {
@@ -3206,6 +3593,11 @@
 
         // show overlay for node neighbours
         window._onShowNodeNeighboursWeHeardClick(node);
+
+        // don't show neighbours if this node hasn't sent a fresh neighbour info packet recently
+        if(areNodeNeighboursStale(node, moment())){
+            return;
+        }
 
         // ensure we have neighbours to show
         const neighbours = node.neighbours ?? [];
@@ -3313,8 +3705,14 @@
         window._onShowNodeNeighboursHeardUsClick(node);
 
         // find all nodes that have us as a neighbour
+        const now = moment();
         const neighbourNodeInfos = [];
         for(const nodeThatMayHaveHeardUs of nodes){
+
+            // don't trust this node's neighbour claims if it hasn't sent a fresh neighbour info packet recently
+            if(areNodeNeighboursStale(nodeThatMayHaveHeardUs, now)){
+                continue;
+            }
 
             // find our node in this nodes neighbours
             const nodeNeighbours = nodeThatMayHaveHeardUs.neighbours ?? [];
@@ -3456,6 +3854,13 @@
         return millisecondsSinceNodeLastUplinkedToMqtt < configNodesDisconnectedAgeInSeconds * 1000;
     }
 
+    // infrastructure sites - router-family roles, excluding CLIENT_BASE (a regular
+    // client role, not a router role)
+    const infraRoleNames = ["ROUTER", "ROUTER_LATE", "REPEATER", "ROUTER_CLIENT"];
+    function isNodeInfra(node) {
+        return infraRoleNames.includes(node.role_name);
+    }
+
     function onNodesUpdated(updatedNodes) {
 
         // clear nodes cache
@@ -3533,12 +3938,9 @@
             marker.addTo(nodesLayerGroup);
             nodesClusteredLayerGroup.addLayer(marker);
 
-            // add markers for routers and repeaters to routers layer group
-            if(node.role_name === "ROUTER"
-                || node.role_name === "ROUTER_CLIENT"
-                || node.role_name === "ROUTER_LATE"
-                || node.role_name === "REPEATER"){
-                nodesRouterLayerGroup.addLayer(marker);
+            // add markers for infrastructure sites (router-family roles) to infra layer group
+            if(isNodeInfra(node)){
+                nodesInfraLayerGroup.addLayer(marker);
             }
 
             // show tooltip on desktop only
@@ -3587,7 +3989,7 @@
 
             // add node neighbours
             var polylineOffset = 0;
-            const neighbours = node.neighbours ?? [];
+            const neighbours = areNodeNeighboursStale(node, now) ? [] : (node.neighbours ?? []);
             for(const neighbour of neighbours){
 
                 // fixme: skipping zero snr? saw some crazy long neighbours with zero snr...
@@ -3654,6 +4056,30 @@
                         // close tooltip on click to prevent tooltip and popup showing at same time
                         event.target.closeTooltip();
                     });
+                    enrichLinePopupWithSnrHistory(line, node.node_id, neighbourNode.node_id, escapeString(node.short_name), escapeString(neighbourNode.short_name), tooltip);
+
+                    // if both ends of this connection are infra nodes, also draw it into the
+                    // dedicated Infra Connections overlay so it can be viewed on its own
+                    if(isNodeInfra(node) && isNodeInfra(neighbourNode)){
+                        const infraLine = L.polyline([
+                            currentNode.getLatLng(),
+                            neighbourNodeMarker.getLatLng(),
+                        ], {
+                            color: '#166534',
+                            opacity: 0.75,
+                        }).addTo(infraConnectionsLayerGroup);
+
+                        infraLine.bindTooltip(tooltip, {
+                            sticky: true,
+                            opacity: 1,
+                            interactive: true,
+                        })
+                        .bindPopup(tooltip)
+                        .on('click', function(event) {
+                            event.target.closeTooltip();
+                        });
+                        enrichLinePopupWithSnrHistory(infraLine, node.node_id, neighbourNode.node_id, escapeString(node.short_name), escapeString(neighbourNode.short_name), tooltip);
+                    }
 
                 }
             }
@@ -3973,13 +4399,13 @@
 
         var loraFrequencyRange = getRegionFrequencyRange(node.region_name);
 
-        var tooltip = `<img class="mb-4 w-40 mx-auto" src="/images/devices/${node.hardware_model_name}.png" onerror="this.classList.add('hidden')"/>` +
+        var tooltip = `<img class="mb-4 w-40 mx-auto" src="/images/devices/${node.hardware_model_name}.webp" onerror="this.classList.add('hidden')"/>` +
             `<b>${escapeString(node.long_name)}</b>` +
             `<br/>Short Name: ${escapeString(node.short_name)}` +
             `<br/>MQTT: ${mqttStatus}` +
             (node.num_online_local_nodes != null ? `<br/>Local Nodes Online: ${node.num_online_local_nodes}` : '') +
             (node.position_precision != null && node.position_precision !== 32 ? `<br/>Position Precision: ${formatPositionPrecision(node.position_precision)}` : '') +
-            `<br/><br/>Role: ${node.role_name}` +
+            `<br/><br/>Role: ${node.role_name}${isNodeInfra(node) ? ' <span class="text-green-700">(Infra)</span>' : ''}` +
             `<br/>Hardware: ${node.hardware_model_name}` +
             (node.firmware_version != null ? `<br/>Firmware: ${node.firmware_version}` : '') +
             (node.region_name != null ? `<br/>LoRa Region: ${node.region_name} (${loraFrequencyRange})` : '') +

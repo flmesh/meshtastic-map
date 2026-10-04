@@ -2,7 +2,6 @@ services:
 
   # listens to mqtt packets and saves to database
   meshtastic-mqtt:
-    container_name: meshtastic-mqtt
     depends_on:
       database:
         condition: service_healthy
@@ -12,11 +11,11 @@ services:
     command: /app/docker/mqtt.sh
     environment:
       DATABASE_URL: "mysql://root:password@database:3306/meshtastic-map?connection_limit=100"
-      MQTT_OPTS: "" # add any custom mqtt.js options here
+      MQTT_OPTS: "${MQTT_OPTS:-}" # add any custom mqtt.js options here
+      MESHTASTIC_PROTOBUFS_VERSION: "${MESHTASTIC_PROTOBUFS_VERSION:-latest}" # pin to a release tag instead of always using the newest, e.g. v2.7.26
 
   # runs the web map ui
   meshtastic-map:
-    container_name: meshtastic-map
     depends_on:
       database:
         condition: service_healthy
@@ -25,27 +24,32 @@ services:
       dockerfile: ./Dockerfile
     command: /app/docker/map.sh
     ports:
-      - 8080:8080/tcp
+      - ${MAP_PORT:-8080}:8080/tcp
     environment:
       DATABASE_URL: "mysql://root:password@database:3306/meshtastic-map?connection_limit=100"
-      MAP_OPTS: "" # add any custom index.js options here
+      MAP_OPTS: "${MAP_OPTS:-}" # add any custom index.js options here
 
   # runs the database to store everything from mqtt
   database:
-    container_name: database
     image: bitnami/mariadb
     ports:
-      - 3306:3306/tcp
+      - ${DB_PORT:-3306}:3306/tcp
     environment:
       MARIADB_DATABASE: "meshtastic-map"
       MARIADB_ROOT_PASSWORD: "password"
     volumes:
       - database_data:/bitnami/mariadb
     healthcheck:
-      test: ['CMD', '/opt/bitnami/scripts/mariadb/healthcheck.sh']
+      # bitnami's own healthcheck script currently fails with "TLS/SSL error: method not
+      # supported" on some image builds (their mysqladmin/mariadb-admin client attempts TLS
+      # even over the local unix socket, and the image's TLS library rejects it) - ping over
+      # the socket with TLS explicitly disabled instead, falling back to their original script
+      # so this keeps working with no changes needed if/when that gets fixed upstream
+      test: ['CMD-SHELL', 'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" mariadb-admin --socket=/opt/bitnami/mariadb/tmp/mysql.sock -uroot --skip-ssl ping || /opt/bitnami/scripts/mariadb/healthcheck.sh']
       interval: 15s
       timeout: 5s
       retries: 6
+      start_period: 60s
       start_interval: 5s
 
 volumes:

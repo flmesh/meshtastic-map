@@ -1049,6 +1049,72 @@ client.on("message", async (topic, message) => {
                 console.error(e);
             }
 
+            // extract edges from neighbour info
+            try {
+                const toNodeId = envelope.packet.from;
+                const neighbors = neighbourInfo.neighbors || [];
+                const packetId = envelope.packet.id;
+                const channelId = envelope.channelId;
+                const gatewayId = envelope.gatewayId ? convertHexIdToNumericId(envelope.gatewayId) : null;
+                const edgesToCreate = [];
+
+                for(const neighbour of neighbors) {
+
+                    // skip if no node id
+                    if(!neighbour.nodeId) {
+                        continue;
+                    }
+
+                    // skip if snr is invalid (0 or null/undefined) - snr can be negative, so check for 0 specifically
+                    if(neighbour.snr === 0 || neighbour.snr == null) {
+                        continue;
+                    }
+
+                    const fromNodeId = neighbour.nodeId;
+
+                    // NeighborInfo.neighbors[].snr is a float already in dB (unlike RouteDiscovery's
+                    // snr fields, which are int32 scaled by 4) - scale it by 4 here so it can share
+                    // the same integer column and /4 read-side conversion as traceroute-sourced edges
+                    const snr = Math.round(neighbour.snr * 4);
+
+                    // fetch node positions from node table
+                    const [fromNode, toNode] = await Promise.all([
+                        prisma.node.findUnique({
+                            where: { node_id: fromNodeId },
+                            select: { latitude: true, longitude: true },
+                        }),
+                        prisma.node.findUnique({
+                            where: { node_id: toNodeId },
+                            select: { latitude: true, longitude: true },
+                        }),
+                    ]);
+
+                    edgesToCreate.push({
+                        from_node_id: fromNodeId,
+                        to_node_id: toNodeId,
+                        snr: snr,
+                        from_latitude: fromNode?.latitude ?? null,
+                        from_longitude: fromNode?.longitude ?? null,
+                        to_latitude: toNode?.latitude ?? null,
+                        to_longitude: toNode?.longitude ?? null,
+                        packet_id: packetId,
+                        channel_id: channelId,
+                        gateway_id: gatewayId,
+                        source: "NEIGHBORINFO_APP",
+                    });
+                }
+
+                if(edgesToCreate.length > 0) {
+                    await prisma.edge.createMany({
+                        data: edgesToCreate,
+                        skipDuplicates: true,
+                    });
+                }
+            } catch (e) {
+                // don't crash mqtt processing over edge extraction failing
+                console.error("Error extracting edges from neighbour info:", e);
+            }
+
             // don't store all neighbour infos, but we want to update the existing node above
             if(!collectNeighbourInfo){
                 return;
@@ -1289,6 +1355,146 @@ client.on("message", async (topic, message) => {
                 });
             } catch (e) {
                 console.error(e);
+            }
+
+            // extract edges from traceroute (only for response packets)
+            if(!envelope.packet.decoded.wantResponse) {
+                try {
+                    const route = routeDiscovery.route || [];
+                    const snrTowards = routeDiscovery.snrTowards || [];
+                    const originNodeId = envelope.packet.to;
+                    const destinationNodeId = envelope.packet.from;
+                    const packetId = envelope.packet.id;
+                    const channelId = envelope.channelId;
+                    const gatewayId = envelope.gatewayId ? convertHexIdToNumericId(envelope.gatewayId) : null;
+
+                    // number of edges: route.length + 1
+                    const numEdges = route.length + 1;
+                    const edgesToCreate = [];
+
+                    // extract edges from the route path
+                    for(let i = 0; i < numEdges; i++) {
+
+                        if(i >= snrTowards.length) {
+                            continue; // array length mismatch - skip this edge
+                        }
+
+                        const snr = snrTowards[i];
+
+                        // -128 means no snr was recorded for this hop
+                        if(snr === -128) {
+                            continue;
+                        }
+
+                        let fromNodeId, toNodeId;
+                        if(route.length === 0) {
+                            // empty route: direct connection (to -> from)
+                            fromNodeId = originNodeId;
+                            toNodeId = destinationNodeId;
+                        } else if(i === 0) {
+                            // first edge: origin -> route[0]
+                            fromNodeId = originNodeId;
+                            toNodeId = route[0];
+                        } else if(i === route.length) {
+                            // last edge: route[route.length-1] -> destination
+                            fromNodeId = route[route.length - 1];
+                            toNodeId = destinationNodeId;
+                        } else {
+                            // middle edge: route[i-1] -> route[i]
+                            fromNodeId = route[i - 1];
+                            toNodeId = route[i];
+                        }
+
+                        const [fromNode, toNode] = await Promise.all([
+                            prisma.node.findUnique({
+                                where: { node_id: fromNodeId },
+                                select: { latitude: true, longitude: true },
+                            }),
+                            prisma.node.findUnique({
+                                where: { node_id: toNodeId },
+                                select: { latitude: true, longitude: true },
+                            }),
+                        ]);
+
+                        edgesToCreate.push({
+                            from_node_id: fromNodeId,
+                            to_node_id: toNodeId,
+                            snr: snr,
+                            from_latitude: fromNode?.latitude ?? null,
+                            from_longitude: fromNode?.longitude ?? null,
+                            to_latitude: toNode?.latitude ?? null,
+                            to_longitude: toNode?.longitude ?? null,
+                            packet_id: packetId,
+                            channel_id: channelId,
+                            gateway_id: gatewayId,
+                            source: "TRACEROUTE_APP",
+                        });
+                    }
+
+                    // extract edges from the route_back path
+                    const routeBack = routeDiscovery.routeBack || [];
+                    const snrBack = routeDiscovery.snrBack || [];
+
+                    if(routeBack.length > 0) {
+                        for(let i = 0; i < routeBack.length; i++) {
+
+                            if(i >= snrBack.length) {
+                                continue; // array length mismatch - skip this edge
+                            }
+
+                            const snr = snrBack[i];
+                            if(snr === -128) {
+                                continue;
+                            }
+
+                            let fromNodeId, toNodeId;
+                            if(i === 0) {
+                                // first edge: from -> route_back[0]
+                                fromNodeId = destinationNodeId; // 'from' in the packet
+                                toNodeId = routeBack[0];
+                            } else {
+                                // subsequent edges: route_back[i-1] -> route_back[i]
+                                fromNodeId = routeBack[i - 1];
+                                toNodeId = routeBack[i];
+                            }
+
+                            const [fromNode, toNode] = await Promise.all([
+                                prisma.node.findUnique({
+                                    where: { node_id: fromNodeId },
+                                    select: { latitude: true, longitude: true },
+                                }),
+                                prisma.node.findUnique({
+                                    where: { node_id: toNodeId },
+                                    select: { latitude: true, longitude: true },
+                                }),
+                            ]);
+
+                            edgesToCreate.push({
+                                from_node_id: fromNodeId,
+                                to_node_id: toNodeId,
+                                snr: snr,
+                                from_latitude: fromNode?.latitude ?? null,
+                                from_longitude: fromNode?.longitude ?? null,
+                                to_latitude: toNode?.latitude ?? null,
+                                to_longitude: toNode?.longitude ?? null,
+                                packet_id: packetId,
+                                channel_id: channelId,
+                                gateway_id: gatewayId,
+                                source: "TRACEROUTE_APP",
+                            });
+                        }
+                    }
+
+                    if(edgesToCreate.length > 0) {
+                        await prisma.edge.createMany({
+                            data: edgesToCreate,
+                            skipDuplicates: true,
+                        });
+                    }
+                } catch (e) {
+                    // don't crash mqtt processing over edge extraction failing
+                    console.error("Error extracting edges from traceroute:", e);
+                }
             }
 
         }
