@@ -275,7 +275,21 @@ const client = mqtt.connect(mqttBrokerUrl, {
 
 // load protobufs
 const root = new protobufjs.Root();
-root.resolvePath = (origin, target) => path.join(protobufsPath, target);
+const protobufjsRoot = path.dirname(require.resolve("protobufjs"));
+
+root.resolvePath = (origin, target) => {
+    const fromProtobufs = path.join(protobufsPath, target);
+    if (fs.existsSync(fromProtobufs)) {
+        return fromProtobufs;
+    }
+
+    const fromProtobufjs = path.join(protobufjsRoot, target);
+    if (fs.existsSync(fromProtobufjs)) {
+        return fromProtobufjs;
+    }
+
+    return fromProtobufs;
+};
 root.loadSync('meshtastic/mqtt.proto');
 const Data = root.lookupType("Data");
 const ServiceEnvelope = root.lookupType("ServiceEnvelope");
